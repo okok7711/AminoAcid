@@ -7,8 +7,8 @@ from .abc import Member, Message, Thread, User, Embed
 
 
 class ApiClient(ABC):
-    """ApiClient skeleton to reduce repeating API calls in code and to clean up code
-    """
+    """ApiClient skeleton to reduce repeating API calls in code and to clean up code"""
+
     async def login(self, email: str, password: str) -> User:
         """Authenticates with the given email and password
 
@@ -24,15 +24,21 @@ class ApiClient(ABC):
         User
             The user that was authenticated
         """
-        response = await (await self._http.request("POST", "/g/s/auth/login", json={
-            "email": email,
-            "v": 2,
-            "secret": f"0 {password}",
-            "deviceID": self._http.device,
-            "clientType": 100,
-            "action": "normal",
-            "timestamp": int(time() * 1000)
-        })).json()
+        response = await (
+            await self._http.request(
+                "POST",
+                "/g/s/auth/login",
+                json={
+                    "email": email,
+                    "v": 2,
+                    "secret": f"0 {password}",
+                    "deviceID": self._http.device,
+                    "clientType": 100,
+                    "action": "normal",
+                    "timestamp": int(time() * 1000),
+                },
+            )
+        ).json()
 
         if response.get("api:statuscode") != 0:
             exceptions.handle_exception(response.get("api:statuscode"), response)
@@ -60,7 +66,9 @@ class ApiClient(ABC):
         response = await (
             await self._http.request(
                 "GET",
-                f"/x{ndcId}/s/chat/thread/{threadId}" if ndcId else f"/g/s/chat/thread/{threadId}"
+                f"/x{ndcId}/s/chat/thread/{threadId}"
+                if ndcId
+                else f"/g/s/chat/thread/{threadId}",
             )
         ).json()
 
@@ -82,10 +90,7 @@ class ApiClient(ABC):
             The `User` object that was requested
         """
         response = await (
-            await self._http.request(
-                "GET",
-                f"/g/s/user-profile/{userId}"
-            )
+            await self._http.request("GET", f"/g/s/user-profile/{userId}")
         ).json()
 
         if response.get("api:statuscode") != 0:
@@ -107,12 +112,9 @@ class ApiClient(ABC):
         Member
             The `Member` object requested for the given community
         """
-        #TODO: Maybe add @overload to fetch_user instead of defining the exact same method twice
+        # TODO: Maybe add @overload to fetch_user instead of defining the exact same method twice
         response = await (
-            await self._http.request(
-                "GET",
-                f"/x{ndcId}/s/user-profile/{userId}"
-            )
+            await self._http.request("GET", f"/x{ndcId}/s/user-profile/{userId}")
         ).json()
 
         if response.get("api:statuscode") != 0:
@@ -120,7 +122,15 @@ class ApiClient(ABC):
 
         return Member(**(response["userProfile"]), client=self)
 
-    async def send_message(self, threadId: str, content: str, *, ndcId: Optional[str] = "", embed: Optional[Embed] = ..., **kwargs) -> Message:
+    async def send_message(
+        self,
+        threadId: str,
+        content: str,
+        *,
+        ndcId: Optional[str] = "",
+        embed: Optional[Embed] = ...,
+        **kwargs,
+    ) -> Message:
         """Sends a message to a given Thread.
 
         Parameters
@@ -143,14 +153,16 @@ class ApiClient(ABC):
         response = await (
             await self._http.request(
                 "POST",
-                f"/x{ndcId}/s/chat/thread/{threadId}/message" if ndcId else f"/g/s/chat/thread/{threadId}",
+                f"/x{ndcId}/s/chat/thread/{threadId}/message"
+                if ndcId
+                else f"/g/s/chat/thread/{threadId}",
                 json={
                     "type": 0,
                     "content": content,
                     "clientRefId": int(time() % 86400),
                     "timestamp": int(time() * 1000),
-                    **kwargs
-                }
+                    **kwargs,
+                },
             )
         ).json()
 

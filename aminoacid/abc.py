@@ -6,15 +6,21 @@ from typing import TYPE_CHECKING, Callable, Optional, overload, Union
 if TYPE_CHECKING:
     from . import Bot
 
+
 class AminoBaseClass(ABC):
-    """This is the base class for all other classes defined by this library, except for clients and exceptions.
-    """
+    """This is the base class for all other classes defined by this library, except for clients and exceptions."""
+
     def __init__(self) -> None:
         super().__init__()
-        
+
     def __repr__(self) -> str:
-        _temp = [f"{attr}={value!r}, " for attr, value in vars(self).items() if value and not isinstance(value, (Callable, type(self.client)))]
-        return f"{type(self).__name__}({''.join(_temp)})"   
+        _temp = [
+            f"{attr}={value!r}, "
+            for attr, value in vars(self).items()
+            if value and not isinstance(value, (Callable, type(self.client)))
+        ]
+        return f"{type(self).__name__}({''.join(_temp)})"
+
 
 class MessageAble(ABC):
     def __init__(self, bot: Bot) -> None:
@@ -22,7 +28,9 @@ class MessageAble(ABC):
         super().__init__()
 
     @overload
-    async def send(self: Union[Member, User], content: str, *, embed = ..., url: str = "") -> Message:
+    async def send(
+        self: Union[Member, User], content: str, *, embed=..., url: str = ""
+    ) -> Message:
         """Send a Message to the User
 
         Parameters
@@ -37,13 +45,11 @@ class MessageAble(ABC):
         Message
             Message object of the sent message
         """
-        
-        #TODO: Finish sending messages to User/Member object.
-        return self.client.send_message(
-            self
-        )
 
-    async def send(self, content: str, *, embed = ..., url: str = "") -> Message:
+        # TODO: Finish sending messages to User/Member object.
+        return self.client.send_message(self)
+
+    async def send(self, content: str, *, embed=..., url: str = "") -> Message:
         """Send a Message to the Channel
 
         Parameters
@@ -60,27 +66,28 @@ class MessageAble(ABC):
         """
         if isinstance(self, Message):
             return await self.client.send_message(
-                content=content,
-                threadId=self.threadId,
-                ndcId=self.ndcId
+                content=content, threadId=self.threadId, ndcId=self.ndcId
             )
         if isinstance(self, Context):
             return await self.client.send_message(
                 content=content,
                 threadId=self.message.threadId,
-                ndcId=self.message.ndcId
+                ndcId=self.message.ndcId,
             )
         if isinstance(self, Thread):
             return await self.client.send_message(
-                content=content,
-                threadId=self.id,
-                ndcId=self.ndcId
+                content=content, threadId=self.id, ndcId=self.ndcId
             )
 
+
 class Context(MessageAble):
-    """Context of a message, this is passed into `UserCommand`s as the first positional argument
-    """
-    def __init__(self, client: Bot, message: Message,) -> None:
+    """Context of a message, this is passed into `UserCommand`s as the first positional argument"""
+
+    def __init__(
+        self,
+        client: Bot,
+        message: Message,
+    ) -> None:
         """Initialises the Context
 
         Parameters
@@ -94,7 +101,7 @@ class Context(MessageAble):
         self.message = message
         self.thread = message.thread
         self.author = message.author
-    
+
     async def reply(self, content: str, **kwargs):
         """Replies to the message described by the context (`self.message`)
 
@@ -103,9 +110,11 @@ class Context(MessageAble):
         content : str
             Content of the message to reply with
         """
-        if self.message.ndcId: url = f"/x{self.message.ndcId}/s/chat/thread/{self.thread.id}"
-        else: f"/g/s/chat/thread/{self.thread.id}"
-        await super().send(content, url = url **kwargs, replyMessageId=self.message.id)
+        if self.message.ndcId:
+            url = f"/x{self.message.ndcId}/s/chat/thread/{self.thread.id}"
+        else:
+            f"/g/s/chat/thread/{self.thread.id}"
+        await super().send(content, url=url**kwargs, replyMessageId=self.message.id)
 
 
 class User(MessageAble, AminoBaseClass):
@@ -122,7 +131,7 @@ class User(MessageAble, AminoBaseClass):
     onlineStatus: int
     accountMembershipStatus: int
     isGlobal: bool = True
-    avatarFrameId: str 
+    avatarFrameId: str
     fanClubList: list = []
     reputation: int = 0
     postsCount: int = 0
@@ -145,10 +154,9 @@ class User(MessageAble, AminoBaseClass):
     extensions: dict
     visitPrivacy: int = 1
     storiesCount: int = 0
-    
-    
+
     client: Bot
-    
+
     def __init__(self, data: dict = {}, **kwargs) -> None:
         """Initialises a new `User` object, calls `_from_dict()` with a combination of the kwargs and the supplied data
 
@@ -159,7 +167,7 @@ class User(MessageAble, AminoBaseClass):
         """
         self._from_dict({**data, **kwargs})
         super().__init__(bot=self.client)
-        
+
     def _from_dict(self, data: dict):
         """Create a new `User` object from a dict
 
@@ -173,21 +181,21 @@ class User(MessageAble, AminoBaseClass):
         self.icon = data.pop("icon", "")
         self.id = data.pop("uid", "")
         self.client = data.pop("client")
-    
+
     async def send(self, content: str, *, embed=...) -> Message:
-        #TODO: Implement this, and allow sending Messages via User Object
+        # TODO: Implement this, and allow sending Messages via User Object
         url = f"/g/s/chat/thread"
         return await super().send(content, embed=embed, url=url)
 
     async def get(self):
-        """Get the complete `User` object, used when a `User` is received partially by the socket to get the missing information.
-        """
-        #TODO: Implement this, use `fetch_user` defined in ApiClient
+        """Get the complete `User` object, used when a `User` is received partially by the socket to get the missing information."""
+        # TODO: Implement this, use `fetch_user` defined in ApiClient
         ...
-        
+
+
 class Member(User):
     ndcId: int
-    
+
     def __init__(self, data: dict = {}, **kwargs) -> None:
         """Initialises a new `Member` object, calls `_from_dict()` with a combination of the kwargs and the supplied data
 
@@ -198,7 +206,7 @@ class Member(User):
         """
         self._from_dict({**data, **kwargs})
         super().__init__(data, **kwargs)
-    
+
     def _from_dict(self, data: dict):
         """Create a new `Member` object from a dict
 
@@ -211,9 +219,10 @@ class Member(User):
         return super()._from_dict(data)
 
     async def send(self, content: str, *, embed=...) -> Message:
-        #TODO: Same as User.
+        # TODO: Same as User.
         return await super().send(content, embed=embed)
-        
+
+
 class Message(AminoBaseClass):
     id: str
     type: int
@@ -231,7 +240,7 @@ class Message(AminoBaseClass):
     chatBubbleVersion: int
     clientRefId: int
     mediaType: int
-    
+
     client: Bot
 
     def __init__(self, data: dict = {}, **kwargs) -> None:
@@ -245,7 +254,7 @@ class Message(AminoBaseClass):
         self._from_dict({**data, **kwargs})
         super().__init__()
         self.startswith = self.content.startswith
-        
+
     def _from_dict(self, data: dict):
         """Create a new `Message` object from a dict
 
@@ -255,21 +264,21 @@ class Message(AminoBaseClass):
             The dict to create the new `Message` object from
         """
         self.client = data.pop("client")
-        
+
         self.nickname = data.pop("nickname", "")
         self.content = data.pop("content", "")
         self.id = data.pop("messageId", "")
         self.threadId = data.pop("threadId", "")
         self.ndcId = data.pop("ndcId", 0)
-        self.thread = Thread(
-            id=self.threadId,
-            ndcId=self.ndcId,
-            client=self.client
-        )
-        if self.ndcId: self.author = Member(data.pop("author", {}), client=self.client, ndcId=self.ndcId)
-        else: self.author = User(data.pop("author", {}), client=self.client)
+        self.thread = Thread(id=self.threadId, ndcId=self.ndcId, client=self.client)
+        if self.ndcId:
+            self.author = Member(
+                data.pop("author", {}), client=self.client, ndcId=self.ndcId
+            )
+        else:
+            self.author = User(data.pop("author", {}), client=self.client)
         self.type = data.pop("type", None)
-        
+
         self.createdTime = data.pop("createdTime", "")
         self.alertOption = data.pop("alertOption", None)
         self.chatBubbleId = data.pop("chatBubbleId", "")
@@ -279,13 +288,13 @@ class Message(AminoBaseClass):
         self.membershipStatus = data.pop("membershipStatus", 0)
         self.includedInSummary = data.pop("includedInSummary", True)
         self.mediaType = data.pop("mediaType", 0)
-        
+
         async def get(self):
-            """Get the complete `Message` object, used when a `Message` is received partially by the socket to get the missing information.
-            """
-            #TODO: Yea, also need to implement this.
+            """Get the complete `Message` object, used when a `Message` is received partially by the socket to get the missing information."""
+            # TODO: Yea, also need to implement this.
             ...
-        
+
+
 class Thread(MessageAble, AminoBaseClass):
     id: str
     content: str
@@ -303,7 +312,7 @@ class Thread(MessageAble, AminoBaseClass):
         """
         self._from_dict({**data, **kwargs})
         super().__init__(bot=self.client)
-        
+
     def _from_dict(self, data: dict):
         """Create a new `Thread` object from a dict
 
@@ -313,25 +322,28 @@ class Thread(MessageAble, AminoBaseClass):
             The dict to create the new `Thread` object from
         """
         self.client = data.pop("client")
-        
+
         self.title = data.pop("title", "")
         self.content = data.pop("content", "")
         self.author = data.pop("author", "")
         self.id = data.pop("threadId", "")
         self.ndcId = data.pop("ndcId", "")
-    
+
     async def send(content: str, *, embed: ..., url: str) -> Message:
         return await super().send(content, embed=embed, url=url)
-    
+
     async def get(self):
-        """Get the complete `Thread` object, used when a `Thread` is received partially by the socket to get the missing information.
-        """
-        self._from_dict((await self._bot.get_thread(ndcId=self.ndcId, threadId=self.id)).__dict__)
+        """Get the complete `Thread` object, used when a `Thread` is received partially by the socket to get the missing information."""
+        self._from_dict(
+            (await self._bot.get_thread(ndcId=self.ndcId, threadId=self.id)).__dict__
+        )
+
 
 class Embed(AminoBaseClass):
-    #TODO: Add Embed classes for both image embeds and user embeds.
+    # TODO: Add Embed classes for both image embeds and user embeds.
     ...
 
+
 class Frame(AminoBaseClass):
-    #TODO: Add Frame class for OOP
+    # TODO: Add Frame class for OOP
     ...

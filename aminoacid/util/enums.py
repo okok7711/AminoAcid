@@ -1,14 +1,16 @@
 from enum import IntEnum
 
+
 class SocketCodes(IntEnum):
-    #TODO: Finish this Enum with other Codes.
-    
+    # TODO: Finish this Enum with other Codes.
+
     MESSAGE = 1000
     NOTIFICATION = 10
-    
+
     TYPING_START = 304
     TYPING_END = 306
-    
+
+
 class MessageTypes(IntEnum):
     TEXT = 0
     STRIKE_MESSAGE = 1

@@ -1,10 +1,5 @@
-import re
 from setuptools import setup, find_packages
-
-with open("aminoacid/__init__.py", "r") as fd:
-    version = re.search(
-        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE
-    ).group(1)
+from aminoacid import __version__, __author__
 
 with open("requirements.txt", "r") as file:
     INSTALL_REQUIRES = file.readlines()
@@ -12,14 +7,14 @@ with open("requirements.txt", "r") as file:
 with open("README.md") as readme:
     setup(
         name="aminoacid",
-        version=version,
+        version=__version__,
         description="Async library for creating Bots for amino",
         long_description=readme.read(),
         long_description_content_type="text/markdown",
         license="MIT License",
-        author="okok7711",
+        author=__author__,
         author_email="okok7711@etstun.de",
-        url="https://github.com/okok7711/aminoacids",
+        url="https://github.com/okok7711/AminoAcids",
         classifiers=[
             "Intended Audience :: Developers",
             "License :: OSI Approved :: MIT License",

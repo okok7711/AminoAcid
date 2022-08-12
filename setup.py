@@ -14,7 +14,7 @@ with open("README.md") as readme:
         license="MIT License",
         author=__author__,
         author_email="okok7711@etstun.de",
-        url="https://github.com/okok7711/AminoAcids",
+        url="https://github.com/okok7711/AminoAcid",
         classifiers=[
             "Intended Audience :: Developers",
             "License :: OSI Approved :: MIT License",

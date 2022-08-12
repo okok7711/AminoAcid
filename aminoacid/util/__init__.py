@@ -39,7 +39,7 @@ def get_headers(
         "NDCDEVICEID": device,
         "Accept-Language": "en-US",
         "Content-Type": "application/json; charset=utf-8",
-        "User-Agent": f"AminoAcid/{__version__} (+https://github.com/okok7711/AminoAcids)",
+        "User-Agent": f"AminoAcid/{__version__} (+https://github.com/okok7711/AminoAcid)",
         "Host": "service.narvii.com",
         "Accept-Encoding": "gzip",
         "Connection": "Keep-Alive",

@@ -63,7 +63,7 @@ class SocketClient:
                 "NDC-MSG-SIG": sig,
                 "NDCDEVICEID": self.http.device,
                 "NDCAUTH": self.http.session,
-                "User-Agent": f"AminoAcid/{__version__} (+https://github.com/okok7711/AminoAcids)",
+                "User-Agent": f"AminoAcid/{__version__} (+https://github.com/okok7711/AminoAcid)",
             },
         )
         await self.sock_conn()

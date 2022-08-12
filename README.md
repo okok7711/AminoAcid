@@ -8,7 +8,7 @@ This project aims to open up the possibilities that other libraries don't fulfil
 While BotAmino *tries* to be easy to use it fails to provide an easy high-level API by forcing to use [Amino.fix](https://github.com/Minori101/Amino.fix) instead of allowing access via their own methods and objects.
 
 ## How do you use it?
-AminoAcid's documentation is available through GitHub pages and auto generated using pdoc, for examples take a look into [the examples dir](/examples)  
+AminoAcid's documentation is available through [GitHub pages](https://okok7711.github.io/AminoAcid/aminoacid.html) and auto generated using [pdoc](https://github.com/mitmproxy/pdoc/), for examples take a look into [the examples dir](/examples)  
 ```python
 from aminoacid import Bot
 from aminoacid.abc import Message, Context

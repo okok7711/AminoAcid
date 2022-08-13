@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import TYPE_CHECKING, Callable, Optional, overload, Union
+from base64 import urlsafe_b64decode
+from importlib.util import find_spec
+from typing import TYPE_CHECKING, Callable, Optional, Union, overload
+
+_ORJSON = find_spec("orjson")
+if _ORJSON:
+    import orjson as json
+else:
+    import json
+
 
 if TYPE_CHECKING:
     from . import Bot
@@ -17,12 +26,12 @@ class AminoBaseClass(ABC):
         _temp = [
             f"{attr}={value!r}, "
             for attr, value in vars(self).items()
-            if value and not isinstance(value, (Callable, type(self.client)))
+            if value and not isinstance(value, (Callable, type(self.client)) if "client" in dir(self) else Callable)
         ]
         return f"{type(self).__name__}({''.join(_temp)})"
 
 
-class MessageAble(ABC):
+class MessageAble(AminoBaseClass):
     def __init__(self, bot: Bot) -> None:
         self._bot = bot
         super().__init__()
@@ -117,7 +126,7 @@ class Context(MessageAble):
         await super().send(content, url=url**kwargs, replyMessageId=self.message.id)
 
 
-class User(MessageAble, AminoBaseClass):
+class User(MessageAble):
     nickname: str
     icon: str
     content: str
@@ -270,7 +279,8 @@ class Message(AminoBaseClass):
         self.id = data.pop("messageId", "")
         self.threadId = data.pop("threadId", "")
         self.ndcId = data.pop("ndcId", 0)
-        self.thread = Thread(id=self.threadId, ndcId=self.ndcId, client=self.client)
+        self.thread = Thread(
+            id=self.threadId, ndcId=self.ndcId, client=self.client)
         if self.ndcId:
             self.author = Member(
                 data.pop("author", {}), client=self.client, ndcId=self.ndcId
@@ -289,13 +299,11 @@ class Message(AminoBaseClass):
         self.includedInSummary = data.pop("includedInSummary", True)
         self.mediaType = data.pop("mediaType", 0)
 
-        async def get(self):
-            """Get the complete `Message` object, used when a `Message` is received partially by the socket to get the missing information."""
-            # TODO: Yea, also need to implement this.
-            ...
+    async def get(self):
+        """Get the complete `Message` object, used when a `Message` is received partially by the socket to get the missing information."""
+        await self.client.fetch_message(messageId=self.id, threadId=self.thread.id, ndcId=self.ndcId)
 
-
-class Thread(MessageAble, AminoBaseClass):
+class Thread(MessageAble):
     id: str
     content: str
     author: User
@@ -347,3 +355,33 @@ class Embed(AminoBaseClass):
 class Frame(AminoBaseClass):
     # TODO: Add Frame class for OOP
     ...
+
+
+class Session(AminoBaseClass):
+    def __init__(self, session: str) -> None:
+        self.sid = f"sid={session}"
+        self.secret = self.deserialize_session(session)
+        
+        self.uid: str = self.secret["2"]
+        self.ip: str = self.secret["4"]
+        self.created: str = self.secret["5"]
+        self.clientType: int = self.secret["6"]
+        
+        
+        super().__init__()
+
+    def deserialize_session(self, session: str) -> dict:
+        """Takes all the info from a given session
+
+        Parameters
+        ----------
+        session : str
+            the session to deserialize
+
+        Returns
+        -------
+        dict
+            dictionary containing all of the information
+        """
+        # TODO: Maybe make a Session class for readability?
+        return json.loads(urlsafe_b64decode(session + "=" * (4 - len(session) % 4))[1:-20])

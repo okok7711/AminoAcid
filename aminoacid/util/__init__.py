@@ -1,17 +1,9 @@
 from hashlib import sha1
 from hmac import HMAC
-from base64 import b64encode, urlsafe_b64decode
-from importlib.util import find_spec
-
-_ORJSON = find_spec("orjson")
-if _ORJSON:
-    import orjson as json
-else:
-    import json
-
+from base64 import b64encode
 from .commands import *
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 def get_headers(
@@ -50,20 +42,3 @@ def get_headers(
         )
 
     return head
-
-
-def deserialize_session(session: str) -> dict:
-    """Takes all the info from a given session
-
-    Parameters
-    ----------
-    session : str
-        the session to deserialize
-
-    Returns
-    -------
-    dict
-        dictionary containing all of the information
-    """
-    # TODO: Maybe make a Session class for readability?
-    return json.loads(urlsafe_b64decode(session + "=" * (4 - len(session) % 4))[1:-20])

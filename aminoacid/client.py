@@ -3,7 +3,7 @@ from time import time
 from typing import Optional
 
 from . import exceptions
-from .abc import Member, Message, Thread, User, Embed
+from .abc import Member, Message, Session, Thread, User, Embed
 
 
 class ApiClient(ABC):
@@ -43,8 +43,8 @@ class ApiClient(ABC):
         if response.get("api:statuscode") != 0:
             exceptions.handle_exception(response.get("api:statuscode"), response)
 
-        self.profile = User(**response, client=self)
-        self._http.session = f"sid={response.get('sid')}"
+        self.profile = User(**(response["userProfile"]), client=self)
+        self._http.session = Session(response.get('sid'))
 
         return self.profile
 
@@ -75,6 +75,36 @@ class ApiClient(ABC):
         if response.get("api:statuscode") != 0:
             exceptions.handle_exception(response.get("api:statuscode"), response)
         return Thread(**(response["thread"]), client=self)
+    
+    async def fetch_message(self, messageId: str, threadId: str,ndcId: Optional[str] = "") -> Message:
+        """Fetches a given `Message` from a `Thread`
+
+        Parameters
+        ----------
+        messageId : str
+            the ID of the `Message` to fetch
+        threadId : str
+            the ID of the `Thread` to fetch from
+        ndcId : Optional[str], optional
+            the community the thread is in, if not given (or 0) it will look for the thread in global, by default, by default ""
+
+        Returns
+        -------
+        Message
+            The `Message` object that was requested
+        """
+        response = await (
+            await self._http.request(
+                "GET",
+                f"/x{ndcId}/s/chat/thread/{threadId}/message/{messageId}"
+                if ndcId
+                else f"/g/s/chat/thread/{threadId}/message/{messageId}",
+            )
+        ).json()
+
+        if response.get("api:statuscode") != 0:
+            exceptions.handle_exception(response.get("api:statuscode"), response)
+        return Thread(**(response["message"]), client=self)
 
     async def fetch_user(self, userId: str) -> User:
         """Fetches a user from the API

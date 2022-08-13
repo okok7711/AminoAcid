@@ -7,26 +7,28 @@ from importlib.util import find_spec
 from logging import Logger, getLogger
 from shlex import split
 from time import asctime
-from typing import Any, Callable, Coroutine, Dict, Optional, TypeVar
+from typing import Any, Callable, Coroutine, Dict, List, Optional, TypeVar
 
 from aiohttp import ClientResponse, ClientSession
 
 from ._socket import SocketClient
-from .abc import Context, Message, User
+from .abc import Context, Message, User, Session, json, _ORJSON
 from .client import ApiClient
-from .exceptions import CommandNotFound
+from .exceptions import CommandExists, CommandNotFound
 from .util import (
     HelpCommand,
     UserCommand,
     __version__,
-    deserialize_session,
     get_headers,
-    json,
 )
 
 __author__ = "okok7711"
 
-_ORJSON = find_spec("orjson")
+_COLOR = find_spec("coloredlogs")
+
+if _COLOR:
+    import coloredlogs
+    coloredlogs.install()
 
 T = TypeVar("T")
 
@@ -52,7 +54,7 @@ class Bot(ApiClient):
         The help_command to use, if not supplied a standard Help Command will be used.
     v : bytes, optional
         The version of the signing algorithm. This is currently \x42
-    session : str, optional
+    sessionId : str, optional
         If given, the bot will not auth via login but will use the given session instead
     """
     loop: asyncio.AbstractEventLoop
@@ -70,7 +72,7 @@ class Bot(ApiClient):
         self._http = HttpClient(logger=self.logger, **kwargs)
         super().__init__()
 
-    def command(self, name=""):
+    def command(self, name="", *, check: Optional[Callable[[Context], bool]] = lambda _: True, check_any: Optional[List[Callable[[Context], bool]]] = []):
         """Wrapper to register commands to the bot
 
         Parameters
@@ -79,13 +81,13 @@ class Bot(ApiClient):
             Name that the command should listen on, by default the name of the function
         """
 
-        def wrap(f: Callable):
+        def wrap(f: Callable[..., Coroutine[Any, Any, T]]):
             @wraps(f)
             def func(*args, **kwargs):
                 if (name or f.__name__) in self.__command_map__:
-                    return
+                    return self.logger.exception(CommandExists(name))
                 self.__command_map__[name or f.__name__] = UserCommand(
-                    func=f, command_name=name
+                    func=f, command_name=name, check=check, check_any=check_any
                 )
 
             return func()
@@ -136,7 +138,7 @@ class Bot(ApiClient):
             raise Exception("No Auth")
         self.loop = asyncio.get_event_loop()
         self.loop.run_until_complete(
-            self.main_loop(email=email, password=password, session=session)
+            self.main_loop(email=email, password=password, sessionId=session)
         )
 
     async def main_loop(
@@ -144,7 +146,7 @@ class Bot(ApiClient):
         email: Optional[str],
         password: Optional[str],
         *,
-        session: Optional[str] = "",
+        sessionId: Optional[str] = "",
     ):
         """Main loop of the Bot, this authenticates and sets the session
 
@@ -154,14 +156,14 @@ class Bot(ApiClient):
             Email of the account to login
         password : Optional[str]
             Password of the account to login
-        session : Optional[str], optional
+        sessionId : Optional[str], optional
             Session of the Account, by default ""
         """
-        if not session:
+        if not sessionId:
             await self.login(email=email, password=password)
         else:
-            self._http.session = f"sid={session}"
-            self.profile = await self.fetch_user(deserialize_session(session)["2"])
+            self._http.session = Session(sessionId)
+            self.profile = await self.fetch_user(self._http.session.uid)
         sock = SocketClient(self)
         try:
             await sock.run_loop()
@@ -178,13 +180,12 @@ class Bot(ApiClient):
         """
         if not message.startswith(self.prefix):
             return
-        args = split(message.content[len(self.prefix) :])
+        args = split(message.content[len(self.prefix):])
         if args[0] in self.__command_map__:
             await self.__command_map__[args.pop(0)](
                 Context(client=self, message=message), *args
             )
         else:
-            print(self.__command_map__)
             self.logger.exception(CommandNotFound(message))
 
     async def cleanup_loop(self):
@@ -194,21 +195,19 @@ class Bot(ApiClient):
 
 
 class HttpClient(ClientSession):
-    session: str
+    session: Session
 
     def __init__(self, logger: Logger, *args, **kwargs) -> None:
-        self.base: str = kwargs.pop("base_uri", "https://service.narvii.com/api/v1")
-        self.key: bytes = kwargs.pop(
-            "key",
-        )
-        self.device: str = kwargs.pop(
-            "device",
-        )
+        self.base: str = kwargs.pop(
+            "base_uri", "https://service.narvii.com/api/v1")
+        self.key: bytes = kwargs.pop("key")
+        self.device: str = kwargs.pop("device")
         self.v: bytes = kwargs.pop("v", b"\x42")
 
         self.logger = logger
 
-        self.session = ""
+        self.session = None
+        
         super().__init__(*args, **kwargs, json_serialize=json_serialize)
 
     async def request(self, method: str, url: str, *args, **kwargs) -> ClientResponse:
@@ -234,7 +233,7 @@ class HttpClient(ClientSession):
             v=self.v,
         )
         if self.session:
-            headers["NDCAUTH"] = self.session
+            headers["NDCAUTH"] = self.session.sid
         response = await super().request(
             method,
             url=(self.base + url if not "wss" in url else url),

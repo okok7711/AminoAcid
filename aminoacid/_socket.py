@@ -62,10 +62,11 @@ class SocketClient:
             headers={
                 "NDC-MSG-SIG": sig,
                 "NDCDEVICEID": self.http.device,
-                "NDCAUTH": self.http.session,
+                "NDCAUTH": self.http.session.sid,
                 "User-Agent": f"AminoAcid/{__version__} (+https://github.com/okok7711/AminoAcid)",
             },
         )
+        await (self.client.events.get("on_ready", empty_cb)())
         await self.sock_conn()
 
     async def handle_message(self, message: Message):
@@ -81,15 +82,17 @@ class SocketClient:
             if not message.startswith(self.client.prefix):
                 await self.client.events["on_message"](message)
             else:
+                #* Don't handle messages that the bot sends
+                if message.author.id == self.client.profile.id: return
                 await self.client.handle_command(message)
         else:
-            print(message)
+            #TODO: Implement other messageTypes
+            ...
 
     async def sock_conn(self):
         """While the socket is open, this iterates over all the received messages.
         If it receives a text message, it will go to `self.handle_message` instead.
         """
-        await (self.client.events.get("on_ready", empty_cb)())
         async for message in self.socket:
             event = message.json()
             if event["t"] == SocketCodes.MESSAGE:

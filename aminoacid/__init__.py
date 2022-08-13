@@ -28,6 +28,7 @@ _COLOR = find_spec("coloredlogs")
 
 if _COLOR:
     import coloredlogs
+
     coloredlogs.install()
 
 T = TypeVar("T")
@@ -72,7 +73,13 @@ class Bot(ApiClient):
         self._http = HttpClient(logger=self.logger, **kwargs)
         super().__init__()
 
-    def command(self, name="", *, check: Optional[Callable[[Context], bool]] = lambda _: True, check_any: Optional[List[Callable[[Context], bool]]] = []):
+    def command(
+        self,
+        name="",
+        *,
+        check: Optional[Callable[[Context], bool]] = lambda _: True,
+        check_any: Optional[List[Callable[[Context], bool]]] = [],
+    ):
         """Wrapper to register commands to the bot
 
         Parameters
@@ -180,7 +187,7 @@ class Bot(ApiClient):
         """
         if not message.startswith(self.prefix):
             return
-        args = split(message.content[len(self.prefix):])
+        args = split(message.content[len(self.prefix) :])
         if args[0] in self.__command_map__:
             await self.__command_map__[args.pop(0)](
                 Context(client=self, message=message), *args
@@ -198,8 +205,7 @@ class HttpClient(ClientSession):
     session: Session
 
     def __init__(self, logger: Logger, *args, **kwargs) -> None:
-        self.base: str = kwargs.pop(
-            "base_uri", "https://service.narvii.com/api/v1")
+        self.base: str = kwargs.pop("base_uri", "https://service.narvii.com/api/v1")
         self.key: bytes = kwargs.pop("key")
         self.device: str = kwargs.pop("device")
         self.v: bytes = kwargs.pop("v", b"\x42")
@@ -207,7 +213,7 @@ class HttpClient(ClientSession):
         self.logger = logger
 
         self.session = None
-        
+
         super().__init__(*args, **kwargs, json_serialize=json_serialize)
 
     async def request(self, method: str, url: str, *args, **kwargs) -> ClientResponse:

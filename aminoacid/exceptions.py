@@ -72,8 +72,10 @@ def handle_exception(code: int, data=None):
 class CommandNotFound(AminoBaseException):
     ...
 
+
 class CommandExists(AminoBaseException):
     ...
-    
+
+
 class CheckFailed(AminoBaseException):
     ...

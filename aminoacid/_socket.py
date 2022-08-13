@@ -82,11 +82,12 @@ class SocketClient:
             if not message.startswith(self.client.prefix):
                 await self.client.events["on_message"](message)
             else:
-                #* Don't handle messages that the bot sends
-                if message.author.id == self.client.profile.id: return
+                # * Don't handle messages that the bot sends
+                if message.author.id == self.client.profile.id:
+                    return
                 await self.client.handle_command(message)
         else:
-            #TODO: Implement other messageTypes
+            # TODO: Implement other messageTypes
             ...
 
     async def sock_conn(self):

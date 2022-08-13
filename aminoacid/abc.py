@@ -26,7 +26,11 @@ class AminoBaseClass(ABC):
         _temp = [
             f"{attr}={value!r}, "
             for attr, value in vars(self).items()
-            if value and not isinstance(value, (Callable, type(self.client)) if "client" in dir(self) else Callable)
+            if value
+            and not isinstance(
+                value,
+                (Callable, type(self.client)) if "client" in dir(self) else Callable,
+            )
         ]
         return f"{type(self).__name__}({''.join(_temp)})"
 
@@ -279,8 +283,7 @@ class Message(AminoBaseClass):
         self.id = data.pop("messageId", "")
         self.threadId = data.pop("threadId", "")
         self.ndcId = data.pop("ndcId", 0)
-        self.thread = Thread(
-            id=self.threadId, ndcId=self.ndcId, client=self.client)
+        self.thread = Thread(id=self.threadId, ndcId=self.ndcId, client=self.client)
         if self.ndcId:
             self.author = Member(
                 data.pop("author", {}), client=self.client, ndcId=self.ndcId
@@ -301,7 +304,10 @@ class Message(AminoBaseClass):
 
     async def get(self):
         """Get the complete `Message` object, used when a `Message` is received partially by the socket to get the missing information."""
-        await self.client.fetch_message(messageId=self.id, threadId=self.thread.id, ndcId=self.ndcId)
+        await self.client.fetch_message(
+            messageId=self.id, threadId=self.thread.id, ndcId=self.ndcId
+        )
+
 
 class Thread(MessageAble):
     id: str
@@ -361,13 +367,12 @@ class Session(AminoBaseClass):
     def __init__(self, session: str) -> None:
         self.sid = f"sid={session}"
         self.secret = self.deserialize_session(session)
-        
+
         self.uid: str = self.secret["2"]
         self.ip: str = self.secret["4"]
         self.created: str = self.secret["5"]
         self.clientType: int = self.secret["6"]
-        
-        
+
         super().__init__()
 
     def deserialize_session(self, session: str) -> dict:
@@ -384,4 +389,6 @@ class Session(AminoBaseClass):
             dictionary containing all of the information
         """
         # TODO: Maybe make a Session class for readability?
-        return json.loads(urlsafe_b64decode(session + "=" * (4 - len(session) % 4))[1:-20])
+        return json.loads(
+            urlsafe_b64decode(session + "=" * (4 - len(session) % 4))[1:-20]
+        )

@@ -44,7 +44,7 @@ class ApiClient(ABC):
             exceptions.handle_exception(response.get("api:statuscode"), response)
 
         self.profile = User(**(response["userProfile"]), client=self)
-        self._http.session = Session(response.get('sid'))
+        self._http.session = Session(response.get("sid"))
 
         return self.profile
 
@@ -75,8 +75,10 @@ class ApiClient(ABC):
         if response.get("api:statuscode") != 0:
             exceptions.handle_exception(response.get("api:statuscode"), response)
         return Thread(**(response["thread"]), client=self)
-    
-    async def fetch_message(self, messageId: str, threadId: str,ndcId: Optional[str] = "") -> Message:
+
+    async def fetch_message(
+        self, messageId: str, threadId: str, ndcId: Optional[str] = ""
+    ) -> Message:
         """Fetches a given `Message` from a `Thread`
 
         Parameters

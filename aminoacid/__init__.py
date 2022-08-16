@@ -66,7 +66,7 @@ class Bot(ApiClient):
         self.events: Dict[str, Callable[..., Coroutine[Any, Any, T]]] = {}
         self.logger = getLogger(__name__)
         self._http = HttpClient(logger=self.logger, **kwargs)
-           
+
         super().__init__()
 
     def command(

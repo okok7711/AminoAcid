@@ -1,8 +1,17 @@
 from __future__ import annotations
 
 from inspect import signature
-from typing import (TYPE_CHECKING, Any, Callable, Coroutine, List, Literal,
-                    Optional, TypeVar, Union)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Coroutine,
+    List,
+    Literal,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 from ..exceptions import CheckFailed, CommandNotFound
 
@@ -13,8 +22,8 @@ T = TypeVar("T")
 
 
 class UserCommand:
-    """Command defined by User
-    """
+    """Command defined by User"""
+
     def __init__(
         self,
         func: Callable[..., Coroutine[Any, Any, T]],
@@ -76,8 +85,8 @@ class UserCommand:
                 result.append(f"[{name}]")
             elif param.kind == param.VAR_POSITIONAL:
                 result.append(
-                    f"[{name}...]"
-                 if not self.require_positional else f"<{name}...>")
+                    f"[{name}...]" if not self.require_positional else f"<{name}...>"
+                )
             else:
                 result.append(f"<{name}>")
         return " ".join(result)

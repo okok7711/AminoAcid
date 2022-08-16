@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from . import Bot
 
 
-
 class SocketClient:
     """Client for the Amino WebSocket, this receives messages and handles them accordingly"""
 
@@ -34,9 +33,9 @@ class SocketClient:
             await self.reconnect()
 
     async def reconnect(self):
-        """Reconnects socket, opens the socket if it didn't open once
-        """
-        if not self.socket.closed: await self.socket.close()
+        """Reconnects socket, opens the socket if it didn't open once"""
+        if not self.socket.closed:
+            await self.socket.close()
         del self.socket
         await self.run()
 
@@ -57,7 +56,9 @@ class SocketClient:
                 },
             )
         except ClientConnectorError as exp:
-            self.client.logger.exception(f"[{asctime()}] Encountered ClientConnectorError while trying to connect to socket: {exp.strerror}")
+            self.client.logger.exception(
+                f"[{asctime()}] Encountered ClientConnectorError while trying to connect to socket: {exp.strerror}"
+            )
             await asyncio.sleep(1)
             return await self.run()
         await (self.client.events.get("on_ready", empty_cb)())
@@ -101,26 +102,23 @@ class SocketClient:
             elif event["t"] == SocketCodes.NOTIFICATION:
                 await (self.client.events.get("on_notification", empty_cb)(message))
             else:
-                self.client.logger.info(f"[{asctime()}] Socket sent unhandled message: {message}")
+                self.client.logger.info(
+                    f"[{asctime()}] Socket sent unhandled message: {message}"
+                )
 
     async def send(self, code: int, object: dict):
-        await self.socket.send_json({
-            "t": code,
-            "o": object
-        })
-    
+        await self.socket.send_json({"t": code, "o": object})
+
     async def subscribe(self, topic: str, *, ndcId: str = ""):
         topic = f"ndtopic:g:{topic}" if not ndcId else f"ndtopic:x{ndcId}:{topic}"
-        await self.send(SocketCodes.SUBSCRIBE_LIVE_LAYER_REQUEST, {
-                "topic": topic,
-                "ndcId": ndcId,
-                "id": "82333"
-            })
+        await self.send(
+            SocketCodes.SUBSCRIBE_LIVE_LAYER_REQUEST,
+            {"topic": topic, "ndcId": ndcId, "id": "82333"},
+        )
 
     async def unsubscribe(self, topic: str, *, ndcId: str = ""):
         topic = f"ndtopic:g:{topic}" if not ndcId else f"ndtopic:x{ndcId}:{topic}"
-        await self.send(SocketCodes.UNSUBSCRIBE_LIVE_LAYER_REQUEST, {
-                "topic": topic,
-                "ndcId": ndcId,
-                "id": "82333"
-            })
+        await self.send(
+            SocketCodes.UNSUBSCRIBE_LIVE_LAYER_REQUEST,
+            {"topic": topic, "ndcId": ndcId, "id": "82333"},
+        )

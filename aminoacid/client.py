@@ -192,8 +192,7 @@ class ApiClient(ABC):
                     "content": content,
                     "clientRefId": int(time() % 86400),
                     "timestamp": int(time() * 1000),
-                    "attachedObject": dict(embed)
-                    **kwargs,
+                    "attachedObject": dict(embed) ** kwargs,
                 },
             )
         ).json()
@@ -202,7 +201,7 @@ class ApiClient(ABC):
             exceptions.handle_exception(response.get("api:statuscode"), response)
         return Message(**(response["message"]), client=self)
 
-    async def start_dm(self, userId: str, *, ndcId: Optional[str] ="") -> Thread:
+    async def start_dm(self, userId: str, *, ndcId: Optional[str] = "") -> Thread:
         """Start direct messaging a user or return the Thread if a DM already exists
 
         Parameters
@@ -220,23 +219,21 @@ class ApiClient(ABC):
         response = await (
             await self._http.request(
                 "POST",
-                f"/x{ndcId}/s/chat/thread/"
-                if ndcId
-                else f"/g/s/chat/thread/",
+                f"/x{ndcId}/s/chat/thread/" if ndcId else f"/g/s/chat/thread/",
                 json={
                     "title": None,
                     "content": None,
                     "initialMessageContent": None,
                     "timestamp": int(time() * 1000),
                     "inviteeUids": [userId],
-                    "type": 0
-                }
+                    "type": 0,
+                },
             )
         ).json()
 
         if response.get("api:statuscode") != 0:
             exceptions.handle_exception(response.get("api:statuscode"), response)
-            
+
         return Thread(**(response["thread"]), client=self)
 
     async def message_user(self, userId: str, **kwargs) -> Message:
@@ -253,7 +250,7 @@ class ApiClient(ABC):
             Return an object representing the sent message
         """
         return (await self.start_dm(userId=userId)).send(**kwargs)
-    
+
     async def upload_image(self, image: Union[bytes, BinaryIO, PathLike]) -> str:
         """Upload an image to the amino servers
 
@@ -267,17 +264,15 @@ class ApiClient(ABC):
         str
             The direct link of the image
         """
-        if isinstance(image, (BinaryIO, PathLike)): kwargs = {"file": image}
-        else: kwargs = {"data": image}
+        if isinstance(image, (BinaryIO, PathLike)):
+            kwargs = {"file": image}
+        else:
+            kwargs = {"data": image}
         response = await (
-            await self._http.request(
-                "POST",
-                "/g/s/media/upload",
-                **kwargs
-            )
+            await self._http.request("POST", "/g/s/media/upload", **kwargs)
         ).json()
 
         if response.get("api:statuscode") != 0:
             exceptions.handle_exception(response.get("api:statuscode"), response)
-            
+
         return response["mediaValue"]

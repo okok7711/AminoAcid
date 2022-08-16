@@ -21,6 +21,7 @@ int
     The UNIX timestamp of the given Amino Timestamp
 """
 
+
 def get_headers(
     data: bytes = b"", device: str = "", key: bytes = b"", v: bytes = b""
 ) -> dict:

@@ -2,8 +2,7 @@ from enum import IntEnum
 
 
 class SocketCodes(IntEnum):
-    """IntEnum containing all websocket responses and request codes taken from `com.narvii.util.ws.WsMessage`
-    """
+    """IntEnum containing all websocket responses and request codes taken from `com.narvii.util.ws.WsMessage`"""
 
     MESSAGE = 1000
     NOTIFICATION = 10

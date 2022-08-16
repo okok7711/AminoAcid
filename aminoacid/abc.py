@@ -21,22 +21,27 @@ if TYPE_CHECKING:
 
 class AminoBaseClass(ABC):
     """This is the base class for all other classes defined by this library, except for clients and exceptions."""
+
     def __init__(self) -> None:
         super().__init__()
+
     def __repr__(self) -> str:
-        try:    #! pdoc complained that vars(self) is a function (which it is NOT) so there's this try/except here to catch that 
+        try:  #! pdoc complained that vars(self) is a function (which it is NOT) so there's this try/except here to catch that
             _temp = [
                 f"{attr}={value!r}, "
                 for attr, value in vars(self).items()
                 if value
                 and not isinstance(
                     value,
-                    (Callable, type(self.client)) if "client" in dir(self) else Callable,
+                    (Callable, type(self.client))
+                    if "client" in dir(self)
+                    else Callable,
                 )
             ]
             return f"{type(self).__name__}({''.join(_temp)})"
         except AttributeError:
-            return f"{type(self).__name__}()" 
+            return f"{type(self).__name__}()"
+
 
 class MessageAble(AminoBaseClass):
     def __init__(self, bot: Bot) -> None:
@@ -67,7 +72,7 @@ class MessageAble(AminoBaseClass):
                 content=content,
                 threadId=self.message.threadId,
                 ndcId=self.message.ndcId,
-                **kwargs
+                **kwargs,
             )
         if isinstance(self, Thread):
             return await self.client.send_message(
@@ -75,7 +80,10 @@ class MessageAble(AminoBaseClass):
             )
         if isinstance(self, User):
             return await self.client.message_user(
-                content=content, userId=self.id, ndcId=self.ndcId if "ndcId" in dir(self) else 0, **kwargs
+                content=content,
+                userId=self.id,
+                ndcId=self.ndcId if "ndcId" in dir(self) else 0,
+                **kwargs,
             )
 
 
@@ -331,18 +339,24 @@ class Thread(MessageAble):
 
 class Embed(AminoBaseClass):
     def __init__(
-        self, objectId: str, objectType: int, link: str, title: str, content: str, mediaList: list
-        ) -> None:
-        
+        self,
+        objectId: str,
+        objectType: int,
+        link: str,
+        title: str,
+        content: str,
+        mediaList: list,
+    ) -> None:
+
         self.id = objectId
         self.type = objectType
         self.link = link
         self.title = title
         self.content = content
         self.mediaList = mediaList
-        
+
         super().__init__()
-    
+
     def __dict__(self):
         return {
             "objectId": self.id,
@@ -350,8 +364,9 @@ class Embed(AminoBaseClass):
             "link": self.link,
             "title": self.title,
             "content": self.content,
-            "mediaList": self.mediaList
+            "mediaList": self.mediaList,
         }
+
 
 class linkSnippet(AminoBaseClass):
     def __init__(self, link: str, image: Union[BinaryIO, PathLike]) -> None:
@@ -369,10 +384,10 @@ class linkSnippet(AminoBaseClass):
                 with open(image, "rb") as f:
                     self.image = b64encode(f.read())
         else:
-            self.image = b64encode(image.read()) 
+            self.image = b64encode(image.read())
         self.link = link
         super().__init__()
-    
+
     async def prepare(self, client: Bot) -> dict:
         """Prepare the link snippet by uploading `self.image` to amino servers via `aminoacid.Bot.upload_image()`
 
@@ -390,7 +405,7 @@ class linkSnippet(AminoBaseClass):
             "link": self.link,
             "mediaType": 100,
             "mediaUploadValue": client.upload_image(self.image),
-            "mediaUploadValueContentType": "image/png"
+            "mediaUploadValueContentType": "image/png",
         }
 
 
@@ -407,11 +422,11 @@ class Notification(AminoBaseClass):
     threadId: str
     isHidden: bool
     id: str
-    
+
     def __init__(self, data: dict) -> None:
         self.from_dict(data)
         super().__init__()
-    
+
     def from_dict(self, data: dict):
         """Create a new `Notification` object from a dict
 
@@ -427,8 +442,9 @@ class Notification(AminoBaseClass):
         self.id = data.pop("id", "")
         self.ndcId = data.pop("ndcId", "")
         self.messageType = data.pop("msgType", 0)
-        
+
         self.payload = data.pop("payload", {})
+
 
 class Session(AminoBaseClass):
     def __init__(self, session: str) -> None:

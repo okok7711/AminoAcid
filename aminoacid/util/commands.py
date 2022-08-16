@@ -1,17 +1,8 @@
 from __future__ import annotations
 
 from inspect import signature
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Coroutine,
-    List,
-    Literal,
-    Optional,
-    TypeVar,
-    Union,
-)
+from typing import (TYPE_CHECKING, Any, Callable, Coroutine, List, Literal,
+                    Optional, TypeVar, Union)
 
 from ..exceptions import CheckFailed, CommandNotFound
 
@@ -22,6 +13,8 @@ T = TypeVar("T")
 
 
 class UserCommand:
+    """Command defined by User
+    """
     def __init__(
         self,
         func: Callable[..., Coroutine[Any, Any, T]],
@@ -39,7 +32,7 @@ class UserCommand:
         command_name : str, optional
             Name of the command, by default the function name
         check : Optional[Callable[[Context], bool]], optional
-            Function that is Called to see if the command may be called, by default a lambda always returning True
+            Function which is called to see if the command may be called, by default always True
         check_any : Optional[List[Callable[[Context], bool]]], optional
             List of checks, command will execute if any of them return True, by default []
         require_positional : Optional[bool], optional
@@ -64,7 +57,7 @@ class UserCommand:
         params = signature(self.callback).parameters
         result = []
         for name, param in params.items():
-            optional = True if param.default else False
+            optional = bool(param.default)
             annotation: Any = param.annotation
             origin = getattr(annotation, "__origin__", None)
             if origin is Union:
@@ -84,7 +77,7 @@ class UserCommand:
             elif param.kind == param.VAR_POSITIONAL:
                 result.append(
                     f"[{name}...]"
-                ) if not self.require_positional else result.append(f"<{name}...>")
+                 if not self.require_positional else f"<{name}...>")
             else:
                 result.append(f"<{name}>")
         return " ".join(result)
@@ -94,9 +87,7 @@ class UserCommand:
 
     def __await__(self, context: Context, *args: Any, **kwargs: Any) -> T:
         """Allow the Command to be executed by calling the UserCommand instance.
-        like ```
-        await UserCommand()
-        ```
+        like `await UserCommand()`
 
         Parameters
         ----------
@@ -109,7 +100,7 @@ class UserCommand:
             returns the Callback return value
         """
 
-        if not any([check(context) for check in self.check_any]) or not self.check(
+        if not any(check(context) for check in self.check_any) or not self.check(
             Context
         ):
             return context.client.logger.exception(CheckFailed(Context))

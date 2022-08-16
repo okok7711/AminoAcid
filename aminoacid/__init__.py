@@ -12,15 +12,10 @@ from typing import Any, Callable, Coroutine, Dict, List, Optional, TypeVar
 from aiohttp import ClientResponse, ClientSession
 
 from ._socket import SocketClient
-from .abc import Context, Message, User, Session, json, _ORJSON
+from .abc import _ORJSON, Context, Message, Session, User, json
 from .client import ApiClient
 from .exceptions import CommandExists, CommandNotFound
-from .util import (
-    HelpCommand,
-    UserCommand,
-    __version__,
-    get_headers,
-)
+from .util import HelpCommand, UserCommand, __version__, get_headers
 
 __author__ = "okok7711"
 
@@ -71,6 +66,7 @@ class Bot(ApiClient):
         self.events: Dict[str, Callable[..., Coroutine[Any, Any, T]]] = {}
         self.logger = getLogger(__name__)
         self._http = HttpClient(logger=self.logger, **kwargs)
+           
         super().__init__()
 
     def command(
@@ -103,13 +99,13 @@ class Bot(ApiClient):
 
     def event(self, name=""):
         """Wrapper to add events the bot should listen to
+        All possible events are defined in `aminoacid.util.events`
 
         Parameters
         ----------
         name : str, optional
             Name that the event should listen on, by default the name of the function
         """
-        # TODO: Add list of available events for documentation
 
         def wrap(f: Callable):
             @wraps(f)
@@ -171,7 +167,7 @@ class Bot(ApiClient):
         else:
             self._http.session = Session(sessionId)
             self.profile = await self.fetch_user(self._http.session.uid)
-        sock = SocketClient(self)
+        self.socket = sock = SocketClient(self)
         try:
             await sock.run_loop()
         finally:
@@ -247,11 +243,11 @@ class HttpClient(ClientSession):
             *args,
             **kwargs,
         )
-        self.log_request(response, self.logger)
+        await self.log_request(response, self.logger)
         return response
 
     @staticmethod
-    def log_request(response: ClientResponse, logger: Logger) -> None:
+    async def log_request(response: ClientResponse, logger: Logger) -> None:
         """Logs a request and its response with info level
 
         Parameters
@@ -261,5 +257,5 @@ class HttpClient(ClientSession):
         """
         logger.info(
             f"{response.request_info.method} [{asctime()}] -> {response.url}: {response.status} [{response.content_type}] "
-            f"Received Headers: {response.headers}, Sent Headers: {response.request_info.headers}"
+            f"Received Headers: {response.headers}, Sent Headers: {response.request_info.headers}, Received Content: {await response.text()}"
         )

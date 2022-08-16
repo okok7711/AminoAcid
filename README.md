@@ -55,10 +55,10 @@ This was originally called AminoAcids but then i noticed that the pypi project "
 ## To-Do
 - [ ] Finish Object attributes
 - [ ] Type checking and converting
-- [ ] Add Embed features
+- [x] Add Embed features
 - [ ] Improve existing features
 - [ ] Better quality in code
 - [ ] Complete Exceptions
-- [ ] Complete SocketCode Enum
+- [x] Complete SocketCode Enum
 - [ ] Make the SocketClient subscribe to other events to allow on_follow and on_notification events 
-- [ ] Finish started but unfinished methods
+- [x] Finish started but unfinished methods

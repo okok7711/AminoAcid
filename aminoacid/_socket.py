@@ -1,22 +1,19 @@
 from __future__ import annotations
-import asyncio
 
-from time import time
+import asyncio
+from time import asctime, time
 from typing import TYPE_CHECKING
 
-from aiohttp import ClientWebSocketResponse
+from aiohttp import ClientConnectorError, ClientWebSocketResponse
 
-from .util import get_headers, __version__
-from .util.enums import SocketCodes, MessageTypes
 from .abc import Message
+from .util import __version__, get_headers
+from .util.enums import MessageTypes, SocketCodes
+from .util.events import empty_cb
 
 if TYPE_CHECKING:
     from . import Bot
 
-
-async def empty_cb(*args, **kwargs):
-    """Empty callback for events, this is called when no event callback is defined by the user"""
-    ...
 
 
 class SocketClient:
@@ -38,16 +35,8 @@ class SocketClient:
 
     async def reconnect(self):
         """Reconnects socket, opens the socket if it didn't open once
-
-        Returns
-        -------
-        None
-            returns if the socket hasn't been opened yet, which case the socket will open first
         """
-        if "socket" not in dir(self):
-            return await self.run()
-        if not self.socket.closed:
-            await self.socket.close()
+        if not self.socket.closed: await self.socket.close()
         del self.socket
         await self.run()
 
@@ -57,15 +46,20 @@ class SocketClient:
         sig = get_headers(data=sign.encode(), key=self.http.key, v=self.http.v)[
             "NDC-MSG-SIG"
         ]
-        self.socket = await self.http.ws_connect(
-            url=f"wss://ws1.narvii.com/?signbody={sign}",
-            headers={
-                "NDC-MSG-SIG": sig,
-                "NDCDEVICEID": self.http.device,
-                "NDCAUTH": self.http.session.sid,
-                "User-Agent": f"AminoAcid/{__version__} (+https://github.com/okok7711/AminoAcid)",
-            },
-        )
+        try:
+            self.socket = await self.http.ws_connect(
+                url=f"wss://ws1.narvii.com/?signbody={sign}",
+                headers={
+                    "NDC-MSG-SIG": sig,
+                    "NDCDEVICEID": self.http.device,
+                    "NDCAUTH": self.http.session.sid,
+                    "User-Agent": f"AminoAcid/{__version__} (+https://github.com/okok7711/AminoAcid)",
+                },
+            )
+        except ClientConnectorError as exp:
+            self.client.logger.exception(f"[{asctime()}] Encountered ClientConnectorError while trying to connect to socket: {exp.strerror}")
+            await asyncio.sleep(1)
+            return await self.run()
         await (self.client.events.get("on_ready", empty_cb)())
         await self.sock_conn()
 
@@ -80,7 +74,7 @@ class SocketClient:
         """
         if message.type == MessageTypes.TEXT:
             if not message.startswith(self.client.prefix):
-                await self.client.events["on_message"](message)
+                await (self.client.events.get("on_message", empty_cb)(message))
             else:
                 # * Don't handle messages that the bot sends
                 if message.author.id == self.client.profile.id:
@@ -104,3 +98,29 @@ class SocketClient:
                         **event["o"]["chatMessage"],
                     )
                 )
+            elif event["t"] == SocketCodes.NOTIFICATION:
+                await (self.client.events.get("on_notification", empty_cb)(message))
+            else:
+                self.client.logger.info(f"[{asctime()}] Socket sent unhandled message: {message}")
+
+    async def send(self, code: int, object: dict):
+        await self.socket.send_json({
+            "t": code,
+            "o": object
+        })
+    
+    async def subscribe(self, topic: str, *, ndcId: str = ""):
+        topic = f"ndtopic:g:{topic}" if not ndcId else f"ndtopic:x{ndcId}:{topic}"
+        await self.send(SocketCodes.SUBSCRIBE_LIVE_LAYER_REQUEST, {
+                "topic": topic,
+                "ndcId": ndcId,
+                "id": "82333"
+            })
+
+    async def unsubscribe(self, topic: str, *, ndcId: str = ""):
+        topic = f"ndtopic:g:{topic}" if not ndcId else f"ndtopic:x{ndcId}:{topic}"
+        await self.send(SocketCodes.UNSUBSCRIBE_LIVE_LAYER_REQUEST, {
+                "topic": topic,
+                "ndcId": ndcId,
+                "id": "82333"
+            })

@@ -1,10 +1,25 @@
+from base64 import b64encode
+from datetime import datetime
 from hashlib import sha1
 from hmac import HMAC
-from base64 import b64encode
+
 from .commands import *
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
+str_to_ts = lambda _str: int(datetime.strptime(_str, "%Y-%m-%dT%H:%M:%SZ").timestamp())
+"""Convert an Amino Timestamp to a UNIX timestamp
+
+Parameters
+----------
+_str : str
+    The string to convert
+
+Returns
+----------
+int
+    The UNIX timestamp of the given Amino Timestamp
+"""
 
 def get_headers(
     data: bytes = b"", device: str = "", key: bytes = b"", v: bytes = b""
@@ -30,7 +45,6 @@ def get_headers(
     head = {
         "NDCDEVICEID": device,
         "Accept-Language": "en-US",
-        "Content-Type": "application/json; charset=utf-8",
         "User-Agent": f"AminoAcid/{__version__} (+https://github.com/okok7711/AminoAcid)",
         "Host": "service.narvii.com",
         "Accept-Encoding": "gzip",

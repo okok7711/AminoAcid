@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC
-from base64 import urlsafe_b64decode
+from base64 import b64encode, urlsafe_b64decode
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Callable, Optional, Union, overload
+from os import PathLike, path
+from typing import TYPE_CHECKING, BinaryIO, Callable, Optional, Union
+
+from .util import str_to_ts
 
 _ORJSON = find_spec("orjson")
 if _ORJSON:
@@ -18,52 +21,30 @@ if TYPE_CHECKING:
 
 class AminoBaseClass(ABC):
     """This is the base class for all other classes defined by this library, except for clients and exceptions."""
-
     def __init__(self) -> None:
         super().__init__()
-
     def __repr__(self) -> str:
-        _temp = [
-            f"{attr}={value!r}, "
-            for attr, value in vars(self).items()
-            if value
-            and not isinstance(
-                value,
-                (Callable, type(self.client)) if "client" in dir(self) else Callable,
-            )
-        ]
-        return f"{type(self).__name__}({''.join(_temp)})"
-
+        try:    #! pdoc complained that vars(self) is a function (which it is NOT) so there's this try/except here to catch that 
+            _temp = [
+                f"{attr}={value!r}, "
+                for attr, value in vars(self).items()
+                if value
+                and not isinstance(
+                    value,
+                    (Callable, type(self.client)) if "client" in dir(self) else Callable,
+                )
+            ]
+            return f"{type(self).__name__}({''.join(_temp)})"
+        except AttributeError:
+            return f"{type(self).__name__}()" 
 
 class MessageAble(AminoBaseClass):
     def __init__(self, bot: Bot) -> None:
         self._bot = bot
         super().__init__()
 
-    @overload
-    async def send(
-        self: Union[Member, User], content: str, *, embed=..., url: str = ""
-    ) -> Message:
-        """Send a Message to the User
-
-        Parameters
-        ----------
-        content : str
-            Content of the message, cannot be empty, must be within 2000 character
-        embed : Embed, optional
-            The embed to send alongside the message, by default ...
-
-        Returns
-        -------
-        Message
-            Message object of the sent message
-        """
-
-        # TODO: Finish sending messages to User/Member object.
-        return self.client.send_message(self)
-
-    async def send(self, content: str, *, embed=..., url: str = "") -> Message:
-        """Send a Message to the Channel
+    async def send(self, content: str, **kwargs) -> Message:
+        """Send a Message to the messageable object
 
         Parameters
         ----------
@@ -79,22 +60,27 @@ class MessageAble(AminoBaseClass):
         """
         if isinstance(self, Message):
             return await self.client.send_message(
-                content=content, threadId=self.threadId, ndcId=self.ndcId
+                content=content, threadId=self.threadId, ndcId=self.ndcId, **kwargs
             )
         if isinstance(self, Context):
             return await self.client.send_message(
                 content=content,
                 threadId=self.message.threadId,
                 ndcId=self.message.ndcId,
+                **kwargs
             )
         if isinstance(self, Thread):
             return await self.client.send_message(
-                content=content, threadId=self.id, ndcId=self.ndcId
+                content=content, threadId=self.id, ndcId=self.ndcId, **kwargs
+            )
+        if isinstance(self, User):
+            return await self.client.message_user(
+                content=content, userId=self.id, ndcId=self.ndcId if "ndcId" in dir(self) else 0, **kwargs
             )
 
 
 class Context(MessageAble):
-    """Context of a message, this is passed into `UserCommand`s as the first positional argument"""
+    """Context of a message, this is passed into `aminoacid.util.UserCommand`s as the first positional argument"""
 
     def __init__(
         self,
@@ -123,11 +109,7 @@ class Context(MessageAble):
         content : str
             Content of the message to reply with
         """
-        if self.message.ndcId:
-            url = f"/x{self.message.ndcId}/s/chat/thread/{self.thread.id}"
-        else:
-            f"/g/s/chat/thread/{self.thread.id}"
-        await super().send(content, url=url**kwargs, replyMessageId=self.message.id)
+        await super().send(content, replyMessageId=self.message.id, **kwargs)
 
 
 class User(MessageAble):
@@ -171,17 +153,17 @@ class User(MessageAble):
     client: Bot
 
     def __init__(self, data: dict = {}, **kwargs) -> None:
-        """Initialises a new `User` object, calls `_from_dict()` with a combination of the kwargs and the supplied data
+        """Initialises a new `User` object, calls `from_dict()` with a combination of the kwargs and the supplied data
 
         Parameters
         ----------
         data : dict, optional
             The data to initialise the `User` with, by default {}
         """
-        self._from_dict({**data, **kwargs})
+        self.from_dict({**data, **kwargs})
         super().__init__(bot=self.client)
 
-    def _from_dict(self, data: dict):
+    def from_dict(self, data: dict):
         """Create a new `User` object from a dict
 
         Parameters
@@ -195,32 +177,30 @@ class User(MessageAble):
         self.id = data.pop("uid", "")
         self.client = data.pop("client")
 
-    async def send(self, content: str, *, embed=...) -> Message:
+    async def send(self, content: str, **kwargs) -> Message:
         # TODO: Implement this, and allow sending Messages via User Object
-        url = f"/g/s/chat/thread"
-        return await super().send(content, embed=embed, url=url)
+        return await super().send(content, **kwargs)
 
-    async def get(self):
+    async def get(self) -> User:
         """Get the complete `User` object, used when a `User` is received partially by the socket to get the missing information."""
-        # TODO: Implement this, use `fetch_user` defined in ApiClient
-        ...
+        return await self.client.fetch_user(self.id)
 
 
 class Member(User):
     ndcId: int
 
     def __init__(self, data: dict = {}, **kwargs) -> None:
-        """Initialises a new `Member` object, calls `_from_dict()` with a combination of the kwargs and the supplied data
+        """Initialises a new `Member` object, calls `from_dict()` with a combination of the kwargs and the supplied data
 
         Parameters
         ----------
         data : dict, optional
             The data to initialise the `Member` with, by default {}
         """
-        self._from_dict({**data, **kwargs})
+        self.from_dict({**data, **kwargs})
         super().__init__(data, **kwargs)
 
-    def _from_dict(self, data: dict):
+    def from_dict(self, data: dict):
         """Create a new `Member` object from a dict
 
         Parameters
@@ -229,11 +209,7 @@ class Member(User):
             The dict to create the new `Member` object from
         """
         self.ndcId = data.pop("ndcId")
-        return super()._from_dict(data)
-
-    async def send(self, content: str, *, embed=...) -> Message:
-        # TODO: Same as User.
-        return await super().send(content, embed=embed)
+        return super().from_dict(data)
 
 
 class Message(AminoBaseClass):
@@ -245,7 +221,7 @@ class Message(AminoBaseClass):
     ndcId: Optional[int] = None
     isHidden: bool
     includedInSummary: bool
-    createdTime: str
+    createdTime: int
     extensions: dict
     alertOption: int
     membershipStatus: int
@@ -257,18 +233,18 @@ class Message(AminoBaseClass):
     client: Bot
 
     def __init__(self, data: dict = {}, **kwargs) -> None:
-        """Initialises a new `Message` object, calls `_from_dict()` with a combination of the kwargs and the supplied data
+        """Initialises a new `Message` object, calls `from_dict()` with a combination of the kwargs and the supplied data
 
         Parameters
         ----------
         data : dict, optional
             The data to initialise the `Message` with, by default {}
         """
-        self._from_dict({**data, **kwargs})
+        self.from_dict({**data, **kwargs})
         super().__init__()
         self.startswith = self.content.startswith
 
-    def _from_dict(self, data: dict):
+    def from_dict(self, data: dict):
         """Create a new `Message` object from a dict
 
         Parameters
@@ -292,7 +268,7 @@ class Message(AminoBaseClass):
             self.author = User(data.pop("author", {}), client=self.client)
         self.type = data.pop("type", None)
 
-        self.createdTime = data.pop("createdTime", "")
+        self.createdTime = str_to_ts(data.pop("createdTime", ""))
         self.alertOption = data.pop("alertOption", None)
         self.chatBubbleId = data.pop("chatBubbleId", "")
         self.clientRefId = data.pop("clientRefId", 0)
@@ -317,17 +293,17 @@ class Thread(MessageAble):
     title: str
 
     def __init__(self, data: dict = {}, **kwargs) -> None:
-        """Initialises a new `Thread` object, calls `_from_dict()` with a combination of the kwargs and the supplied data
+        """Initialises a new `Thread` object, calls `from_dict()` with a combination of the kwargs and the supplied data
 
         Parameters
         ----------
         data : dict, optional
             The data to initialise the `Thread` with, by default {}
         """
-        self._from_dict({**data, **kwargs})
+        self.from_dict({**data, **kwargs})
         super().__init__(bot=self.client)
 
-    def _from_dict(self, data: dict):
+    def from_dict(self, data: dict):
         """Create a new `Thread` object from a dict
 
         Parameters
@@ -343,25 +319,116 @@ class Thread(MessageAble):
         self.id = data.pop("threadId", "")
         self.ndcId = data.pop("ndcId", "")
 
-    async def send(content: str, *, embed: ..., url: str) -> Message:
-        return await super().send(content, embed=embed, url=url)
+    async def send(content: str, **kwargs) -> Message:
+        return await super().send(content, **kwargs)
 
     async def get(self):
         """Get the complete `Thread` object, used when a `Thread` is received partially by the socket to get the missing information."""
-        self._from_dict(
+        self.from_dict(
             (await self._bot.get_thread(ndcId=self.ndcId, threadId=self.id)).__dict__
         )
 
 
 class Embed(AminoBaseClass):
-    # TODO: Add Embed classes for both image embeds and user embeds.
-    ...
+    def __init__(
+        self, objectId: str, objectType: int, link: str, title: str, content: str, mediaList: list
+        ) -> None:
+        
+        self.id = objectId
+        self.type = objectType
+        self.link = link
+        self.title = title
+        self.content = content
+        self.mediaList = mediaList
+        
+        super().__init__()
+    
+    def __dict__(self):
+        return {
+            "objectId": self.id,
+            "objectType": self.type,
+            "link": self.link,
+            "title": self.title,
+            "content": self.content,
+            "mediaList": self.mediaList
+        }
+
+class linkSnippet(AminoBaseClass):
+    def __init__(self, link: str, image: Union[BinaryIO, PathLike]) -> None:
+        """Initialises a new Link Snippet object to use for sending them in chat
+
+        Parameters
+        ----------
+        link : str
+            link of the snipped
+        image : Union[BinaryIO, PathLike]
+            Either a Path of the image or an IO representation of the image
+        """
+        if isinstance(image, PathLike):
+            if path.exists(image):
+                with open(image, "rb") as f:
+                    self.image = b64encode(f.read())
+        else:
+            self.image = b64encode(image.read()) 
+        self.link = link
+        super().__init__()
+    
+    async def prepare(self, client: Bot) -> dict:
+        """Prepare the link snippet by uploading `self.image` to amino servers via `aminoacid.Bot.upload_image()`
+
+        Parameters
+        ----------
+        client : Bot
+            Bot object to upload the image
+
+        Returns
+        -------
+        dict
+            Dict containing all the information of the linkSnippet object
+        """
+        return {
+            "link": self.link,
+            "mediaType": 100,
+            "mediaUploadValue": client.upload_image(self.image),
+            "mediaUploadValueContentType": "image/png"
+        }
 
 
 class Frame(AminoBaseClass):
     # TODO: Add Frame class for OOP
     ...
 
+
+class Notification(AminoBaseClass):
+    payload: dict
+    timestamp: int
+    messageType: int
+    ndcId: str
+    threadId: str
+    isHidden: bool
+    id: str
+    
+    def __init__(self, data: dict) -> None:
+        self.from_dict(data)
+        super().__init__()
+    
+    def from_dict(self, data: dict):
+        """Create a new `Notification` object from a dict
+
+        Parameters
+        ----------
+        data : dict
+            The dict to create the new `Notification` object from
+        """
+
+        self.timestamp = str_to_ts(data.pop("ts", ""))
+        self.threadId = data.pop("tid", "")
+        self.isHiddem = data.pop("isHidden", "")
+        self.id = data.pop("id", "")
+        self.ndcId = data.pop("ndcId", "")
+        self.messageType = data.pop("msgType", 0)
+        
+        self.payload = data.pop("payload", {})
 
 class Session(AminoBaseClass):
     def __init__(self, session: str) -> None:
@@ -370,7 +437,7 @@ class Session(AminoBaseClass):
 
         self.uid: str = self.secret["2"]
         self.ip: str = self.secret["4"]
-        self.created: str = self.secret["5"]
+        self.created: int = self.secret["5"]
         self.clientType: int = self.secret["6"]
 
         super().__init__()
@@ -388,7 +455,6 @@ class Session(AminoBaseClass):
         dict
             dictionary containing all of the information
         """
-        # TODO: Maybe make a Session class for readability?
         return json.loads(
             urlsafe_b64decode(session + "=" * (4 - len(session) % 4))[1:-20]
         )

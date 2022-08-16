@@ -1,9 +1,10 @@
 from abc import ABC
+from os import PathLike
 from time import time
-from typing import Optional
+from typing import BinaryIO, Optional, Union
 
 from . import exceptions
-from .abc import Member, Message, Session, Thread, User, Embed
+from .abc import Embed, Member, Message, Session, Thread, User
 
 
 class ApiClient(ABC):
@@ -144,7 +145,6 @@ class ApiClient(ABC):
         Member
             The `Member` object requested for the given community
         """
-        # TODO: Maybe add @overload to fetch_user instead of defining the exact same method twice
         response = await (
             await self._http.request("GET", f"/x{ndcId}/s/user-profile/{userId}")
         ).json()
@@ -160,7 +160,7 @@ class ApiClient(ABC):
         content: str,
         *,
         ndcId: Optional[str] = "",
-        embed: Optional[Embed] = ...,
+        embed: Optional[Embed] = Embed(None, None, None, None, None, None),
         **kwargs,
     ) -> Message:
         """Sends a message to a given Thread.
@@ -174,8 +174,7 @@ class ApiClient(ABC):
         ndcId : Optional[str], optional
             The community the Thread is in, if not given (or 0) it will look for a global chat, by default ""
         embed : Optional[Embed], optional
-            Embed to send alongside the message, by default ...
-            **THIS IS NOT IMPLEMENTED YET**
+            Embed to send alongside the message, by default empty embed
 
         Returns
         -------
@@ -193,6 +192,7 @@ class ApiClient(ABC):
                     "content": content,
                     "clientRefId": int(time() % 86400),
                     "timestamp": int(time() * 1000),
+                    "attachedObject": dict(embed)
                     **kwargs,
                 },
             )
@@ -201,3 +201,83 @@ class ApiClient(ABC):
         if response.get("api:statuscode") != 0:
             exceptions.handle_exception(response.get("api:statuscode"), response)
         return Message(**(response["message"]), client=self)
+
+    async def start_dm(self, userId: str, *, ndcId: Optional[str] ="") -> Thread:
+        """Start direct messaging a user or return the Thread if a DM already exists
+
+        Parameters
+        ----------
+        userId : str
+            the user you want to start a DM with
+        ndcId : Optional[str], optional
+            the community the member is in, if sending to a user, this  will be empty
+
+        Returns
+        -------
+        Thread
+            Thread of the DMs
+        """
+        response = await (
+            await self._http.request(
+                "POST",
+                f"/x{ndcId}/s/chat/thread/"
+                if ndcId
+                else f"/g/s/chat/thread/",
+                json={
+                    "title": None,
+                    "content": None,
+                    "initialMessageContent": None,
+                    "timestamp": int(time() * 1000),
+                    "inviteeUids": [userId],
+                    "type": 0
+                }
+            )
+        ).json()
+
+        if response.get("api:statuscode") != 0:
+            exceptions.handle_exception(response.get("api:statuscode"), response)
+            
+        return Thread(**(response["thread"]), client=self)
+
+    async def message_user(self, userId: str, **kwargs) -> Message:
+        """Send a message to a user's DMs, this starts the DMs (via `start_dm()`) if they don't exist already
+
+        Parameters
+        ----------
+        userId : str
+            userId to send a message to
+
+        Returns
+        -------
+        Message
+            Return an object representing the sent message
+        """
+        return (await self.start_dm(userId=userId)).send(**kwargs)
+    
+    async def upload_image(self, image: Union[bytes, BinaryIO, PathLike]) -> str:
+        """Upload an image to the amino servers
+
+        Parameters
+        ----------
+        image : Union[bytes, BinaryIO, PathLike]
+            Either the read out image, an IO object representing the Image, or the image path
+
+        Returns
+        -------
+        str
+            The direct link of the image
+        """
+        if isinstance(image, (BinaryIO, PathLike)): kwargs = {"file": image}
+        else: kwargs = {"data": image}
+        response = await (
+            await self._http.request(
+                "POST",
+                "/g/s/media/upload",
+                **kwargs
+            )
+        ).json()
+
+        if response.get("api:statuscode") != 0:
+            exceptions.handle_exception(response.get("api:statuscode"), response)
+            
+        return response["mediaValue"]

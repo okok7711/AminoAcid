@@ -84,7 +84,7 @@ class SocketClient:
         else:
             # TODO: Implement other messageTypes
             ...
-    
+
     async def handle_notification(self, notification: Notification):
         """Handles received notifications
         All unknown or message notifications will cause `on_notification()` to trigger
@@ -93,13 +93,17 @@ class SocketClient:
         ----------
         notification : Notification
             the notification that was received by the socket to handle
-        """ 
+        """
         _events = {
             NotifTypes.INVITE_VC: "on_vc_invite",
             NotifTypes.START_VC: "on_vc_start",
             NotifTypes.MESSAGE: "on_notification",
         }
-        await (self.client.events.get(_events.get(notification.type, "on_notification"), empty_cb)(notification))
+        await (
+            self.client.events.get(
+                _events.get(notification.type, "on_notification"), empty_cb
+            )(notification)
+        )
 
     async def sock_conn(self):
         """While the socket is open, this iterates over all the received messages.

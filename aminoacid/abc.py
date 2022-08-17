@@ -35,7 +35,7 @@ class AminoBaseClass(ABC):
                     value,
                     (Callable, type(self.client))
                     if "client" in dir(self)
-                    else Callable
+                    else Callable,
                 )
             ]
             return f"{type(self).__name__}({''.join(_temp).rstrip(', ')})"
@@ -361,9 +361,9 @@ class Community(AminoBaseClass):
     templateId: int
     createdTime: int
     promotionalMediaList: Optional[List]
-    
+
     # TODO: Implement this!!
-    
+
     def __init__(self, data: dict = {}, **kwargs) -> None:
         """Initialises a new `Community` object, calls `from_dict()` with a combination of the kwargs and the supplied data
 
@@ -387,6 +387,7 @@ class Community(AminoBaseClass):
 
         self.name = data.pop("name", "")
         self.id = data.pop("ndcId", "")
+
 
 class Embed(AminoBaseClass):
     def __init__(
@@ -489,7 +490,7 @@ class Notification(AminoBaseClass):
         """
 
         self.payload = data.pop("payload", {})
-        
+
         self.timestamp = self.payload.get("ts", "")
         self.threadId = self.payload.get("tid", "")
         self.isHiddem = self.payload.get("isHidden", "")
@@ -497,10 +498,11 @@ class Notification(AminoBaseClass):
         self.ndcId = self.payload.get("ndcId", "")
         self.messageType = self.payload.get("msgType", 0)
         self.type = self.payload.get("notifType")
-        
+
         self.data = data
-        
-        if self.timestamp: self.timestamp = str_to_ts(self.timestamp)
+
+        if self.timestamp:
+            self.timestamp = str_to_ts(self.timestamp)
 
 
 class Session(AminoBaseClass):

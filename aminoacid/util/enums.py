@@ -89,6 +89,7 @@ class NotifTypes(IntEnum):
     INVITE_VC = 29
     RECEIVED_COINS = 51
 
+
 class MessageTypes(IntEnum):
     TEXT = 0
     STRIKE_MESSAGE = 1
@@ -137,12 +138,12 @@ class MessageTypes(IntEnum):
     WELCOME_MESSAGE = 65282
     INVITE_MESSAGE = 65283
 
+
 class Topics(Enum):
     START_TYPING = "users-start-typing-at"
     END_TYPING = "users-end-typing-at"
-    
+
     START_RECODING = "users-start-recording-at"
     END_RECORDING = "users-end-recording-at"
-    
+
     ONLINE_MEMBERS = "online-members"
-    

@@ -56,7 +56,7 @@ async def on_ready():
 
 ...
 ```
-so far known topics are documented in 
+so far known topics are documented in [the `Topics` enum](https://okok7711.github.io/AminoAcid/aminoacid/util/enums.html#Topics)
 
 ## Why no key?
 The aim of this library is **NOT** to make malicious bots, which is why you need to put the key in yourself.  

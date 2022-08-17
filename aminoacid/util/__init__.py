@@ -21,6 +21,7 @@ int
     The UNIX timestamp of the given Amino Timestamp
 """
 
+
 def parse_topic(topic_str: str) -> dict:
     """Parses a topic string (e.g. "ndtopic:x1:users-start-typing-at:00000000-0000-0000-0000-000000000000")
 
@@ -34,7 +35,11 @@ def parse_topic(topic_str: str) -> dict:
     dict
         Dictionary containing the scope, topic and extras given in the string
     """
-    return {key: field for field, key in zip(topic_str.split(":")[1:], ["scope", "topic", "extras"])}
+    return {
+        key: field
+        for field, key in zip(topic_str.split(":")[1:], ["scope", "topic", "extras"])
+    }
+
 
 def get_headers(
     data: bytes = b"", device: str = "", key: bytes = b"", v: bytes = b""

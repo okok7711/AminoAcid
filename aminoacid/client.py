@@ -3,7 +3,16 @@ from time import time
 from typing import BinaryIO, List, Optional, Union
 
 from . import exceptions
-from .abc import AminoBaseClass, Embed, Member, Message, Session, Thread, User, Community
+from .abc import (
+    AminoBaseClass,
+    Embed,
+    Member,
+    Message,
+    Session,
+    Thread,
+    User,
+    Community,
+)
 
 
 class ApiClient(AminoBaseClass):
@@ -249,7 +258,9 @@ class ApiClient(AminoBaseClass):
         Message
             Return an object representing the sent message
         """
-        return await (await self.start_dm(userId=userId, ndcId=kwargs.pop("ndcId", ""))).send(**kwargs)
+        return await (
+            await self.start_dm(userId=userId, ndcId=kwargs.pop("ndcId", ""))
+        ).send(**kwargs)
 
     async def upload_image(self, image: Union[bytes, BinaryIO, PathLike]) -> str:
         """Upload an image to the amino servers
@@ -290,28 +301,31 @@ class ApiClient(AminoBaseClass):
         Optional[dict]
             A dictionary containing devOptions, returns None if it doesn't exist
         """
-        response = await (await self._http.request(
-            "POST",
-            f"/x{ndcId}/s/device"
-            if ndcId
-            else "/g/s/device",
-            json={
-                "deviceID": self._http.device,
-                "bundleID": "com.narvii.amino.master",
-                "clientType": 100,
-                "timezone": 60,
-                "systemPushEnabled": True,
-                "locale": "en_DE",
-                "deviceToken": "ccti9l74jmc:APA91bH-5W_kG8fmdeAgAhKGxTgoA8SLWeJZcNgPwN8vHgj2uaCxVifq9rjJYEI72dh6S6ntoW4uZsWuN5Kzzead8onl0rBB2EgLYHLixYvkbuz1COgiO9oXPb1DLyMZURapuP7AOTGs",
-                "deviceTokenType": 1,
-                "timestamp": int(time() * 1000)
-        })).json()
+        response = await (
+            await self._http.request(
+                "POST",
+                f"/x{ndcId}/s/device" if ndcId else "/g/s/device",
+                json={
+                    "deviceID": self._http.device,
+                    "bundleID": "com.narvii.amino.master",
+                    "clientType": 100,
+                    "timezone": 60,
+                    "systemPushEnabled": True,
+                    "locale": "en_DE",
+                    "deviceToken": "ccti9l74jmc:APA91bH-5W_kG8fmdeAgAhKGxTgoA8SLWeJZcNgPwN8vHgj2uaCxVifq9rjJYEI72dh6S6ntoW4uZsWuN5Kzzead8onl0rBB2EgLYHLixYvkbuz1COgiO9oXPb1DLyMZURapuP7AOTGs",
+                    "deviceTokenType": 1,
+                    "timestamp": int(time() * 1000),
+                },
+            )
+        ).json()
         if response.get("api:statuscode") != 0:
             return exceptions.handle_exception(response.get("api:statuscode"), response)
-        
+
         return response["devOptions"]
 
-    async def fetch_communities(self, start: int = 0, size: int = 25) -> List[Community]:
+    async def fetch_communities(
+        self, start: int = 0, size: int = 25
+    ) -> List[Community]:
         """Fetch a list of communities that the bot is in, this can be used to set tokens for each community
 
         Parameters
@@ -328,15 +342,13 @@ class ApiClient(AminoBaseClass):
         """
         response = await (
             await self._http.request(
-                "GET",
-                "/g/s/community/joined",
-                params={
-                    "start": start,
-                    "size": size
-                }
+                "GET", "/g/s/community/joined", params={"start": start, "size": size}
             )
         ).json()
 
         if response.get("api:statuscode") != 0:
             return exceptions.handle_exception(response.get("api:statuscode"), response)
-        return [Community(**community, client=self) for community in response["communityList"]]
+        return [
+            Community(**community, client=self)
+            for community in response["communityList"]
+        ]

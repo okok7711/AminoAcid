@@ -4,7 +4,7 @@ from abc import ABC
 from base64 import b64encode, urlsafe_b64decode
 from importlib.util import find_spec
 from os import PathLike, path
-from typing import TYPE_CHECKING, BinaryIO, Callable, Optional, Union
+from typing import TYPE_CHECKING, BinaryIO, Callable, Dict, List, Optional, Union
 
 from .util import str_to_ts
 
@@ -35,10 +35,10 @@ class AminoBaseClass(ABC):
                     value,
                     (Callable, type(self.client))
                     if "client" in dir(self)
-                    else Callable,
+                    else Callable
                 )
             ]
-            return f"{type(self).__name__}({''.join(_temp)})"
+            return f"{type(self).__name__}({''.join(_temp).rstrip(', ')})"
         except AttributeError:
             return f"{type(self).__name__}()"
 
@@ -327,7 +327,7 @@ class Thread(MessageAble):
         self.id = data.pop("threadId", "")
         self.ndcId = data.pop("ndcId", "")
 
-    async def send(content: str, **kwargs) -> Message:
+    async def send(self, content: str, **kwargs) -> Message:
         return await super().send(content, **kwargs)
 
     async def get(self):
@@ -336,6 +336,57 @@ class Thread(MessageAble):
             (await self._bot.get_thread(ndcId=self.ndcId, threadId=self.id)).__dict__
         )
 
+
+class Community(AminoBaseClass):
+    userAddedTopicList: Optional[List]
+    agent: Member
+    listedStatus: int
+    probationStatus: int
+    themePack: dict
+    membersCount: int
+    primaryLanguage: str
+    communityHeat: int
+    strategyIngo: str
+    tagline: str
+    joinType: int
+    status: int
+    launchPage: dict
+    modifiedTime: int
+    ndcId: str
+    activeInfo: Optional[Dict]
+    link: str
+    icon: str
+    endpoint: str
+    name: str
+    templateId: int
+    createdTime: int
+    promotionalMediaList: Optional[List]
+    
+    # TODO: Implement this!!
+    
+    def __init__(self, data: dict = {}, **kwargs) -> None:
+        """Initialises a new `Community` object, calls `from_dict()` with a combination of the kwargs and the supplied data
+
+        Parameters
+        ----------
+        data : dict, optional
+            The data to initialise the `Community` with, by default {}
+        """
+        self.from_dict({**data, **kwargs})
+        super().__init__()
+
+    def from_dict(self, data: dict):
+        """Create a new `Community` object from a dict
+
+        Parameters
+        ----------
+        data : dict
+            The dict to create the new `Community` object from
+        """
+        self.client = data.pop("client")
+
+        self.name = data.pop("name", "")
+        self.id = data.pop("ndcId", "")
 
 class Embed(AminoBaseClass):
     def __init__(
@@ -422,6 +473,7 @@ class Notification(AminoBaseClass):
     threadId: str
     isHidden: bool
     id: str
+    type: int
 
     def __init__(self, data: dict) -> None:
         self.from_dict(data)
@@ -436,14 +488,19 @@ class Notification(AminoBaseClass):
             The dict to create the new `Notification` object from
         """
 
-        self.timestamp = str_to_ts(data.pop("ts", ""))
-        self.threadId = data.pop("tid", "")
-        self.isHiddem = data.pop("isHidden", "")
-        self.id = data.pop("id", "")
-        self.ndcId = data.pop("ndcId", "")
-        self.messageType = data.pop("msgType", 0)
-
         self.payload = data.pop("payload", {})
+        
+        self.timestamp = self.payload.get("ts", "")
+        self.threadId = self.payload.get("tid", "")
+        self.isHiddem = self.payload.get("isHidden", "")
+        self.id = self.payload.get("id", "")
+        self.ndcId = self.payload.get("ndcId", "")
+        self.messageType = self.payload.get("msgType", 0)
+        self.type = self.payload.get("notifType")
+        
+        self.data = data
+        
+        if self.timestamp: self.timestamp = str_to_ts(self.timestamp)
 
 
 class Session(AminoBaseClass):

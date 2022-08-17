@@ -1,13 +1,12 @@
-from abc import ABC
 from os import PathLike
 from time import time
-from typing import BinaryIO, Optional, Union
+from typing import BinaryIO, List, Optional, Union
 
 from . import exceptions
-from .abc import Embed, Member, Message, Session, Thread, User
+from .abc import AminoBaseClass, Embed, Member, Message, Session, Thread, User, Community
 
 
-class ApiClient(ABC):
+class ApiClient(AminoBaseClass):
     """ApiClient skeleton to reduce repeating API calls in code and to clean up code"""
 
     async def login(self, email: str, password: str) -> User:
@@ -42,7 +41,7 @@ class ApiClient(ABC):
         ).json()
 
         if response.get("api:statuscode") != 0:
-            exceptions.handle_exception(response.get("api:statuscode"), response)
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
 
         self.profile = User(**(response["userProfile"]), client=self)
         self._http.session = Session(response.get("sid"))
@@ -74,7 +73,7 @@ class ApiClient(ABC):
         ).json()
 
         if response.get("api:statuscode") != 0:
-            exceptions.handle_exception(response.get("api:statuscode"), response)
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
         return Thread(**(response["thread"]), client=self)
 
     async def fetch_message(
@@ -106,7 +105,7 @@ class ApiClient(ABC):
         ).json()
 
         if response.get("api:statuscode") != 0:
-            exceptions.handle_exception(response.get("api:statuscode"), response)
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
         return Thread(**(response["message"]), client=self)
 
     async def fetch_user(self, userId: str) -> User:
@@ -127,7 +126,7 @@ class ApiClient(ABC):
         ).json()
 
         if response.get("api:statuscode") != 0:
-            exceptions.handle_exception(response.get("api:statuscode"), response)
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
         return User(**(response["userProfile"]), client=self)
 
     async def fetch_member(self, userId: str, ndcId: str) -> Member:
@@ -150,7 +149,7 @@ class ApiClient(ABC):
         ).json()
 
         if response.get("api:statuscode") != 0:
-            exceptions.handle_exception(response.get("api:statuscode"), response)
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
 
         return Member(**(response["userProfile"]), client=self)
 
@@ -192,13 +191,14 @@ class ApiClient(ABC):
                     "content": content,
                     "clientRefId": int(time() % 86400),
                     "timestamp": int(time() * 1000),
-                    "attachedObject": dict(embed) ** kwargs,
+                    "attachedObject": embed.__dict__(),
+                    **kwargs,
                 },
             )
         ).json()
 
         if response.get("api:statuscode") != 0:
-            exceptions.handle_exception(response.get("api:statuscode"), response)
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
         return Message(**(response["message"]), client=self)
 
     async def start_dm(self, userId: str, *, ndcId: Optional[str] = "") -> Thread:
@@ -232,7 +232,7 @@ class ApiClient(ABC):
         ).json()
 
         if response.get("api:statuscode") != 0:
-            exceptions.handle_exception(response.get("api:statuscode"), response)
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
 
         return Thread(**(response["thread"]), client=self)
 
@@ -249,7 +249,7 @@ class ApiClient(ABC):
         Message
             Return an object representing the sent message
         """
-        return (await self.start_dm(userId=userId)).send(**kwargs)
+        return await (await self.start_dm(userId=userId, ndcId=kwargs.pop("ndcId", ""))).send(**kwargs)
 
     async def upload_image(self, image: Union[bytes, BinaryIO, PathLike]) -> str:
         """Upload an image to the amino servers
@@ -273,6 +273,70 @@ class ApiClient(ABC):
         ).json()
 
         if response.get("api:statuscode") != 0:
-            exceptions.handle_exception(response.get("api:statuscode"), response)
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
 
         return response["mediaValue"]
+
+    async def set_device(self, ndcId: str = "") -> Optional[dict]:
+        """Set the device pushToken to receive notifications on the websocket
+
+        Parameters
+        ----------
+        ndcId : str, optional
+            Optionally a community to set the token in, by default ""
+
+        Returns
+        -------
+        Optional[dict]
+            A dictionary containing devOptions, returns None if it doesn't exist
+        """
+        response = await (await self._http.request(
+            "POST",
+            f"/x{ndcId}/s/device"
+            if ndcId
+            else "/g/s/device",
+            json={
+                "deviceID": self._http.device,
+                "bundleID": "com.narvii.amino.master",
+                "clientType": 100,
+                "timezone": 60,
+                "systemPushEnabled": True,
+                "locale": "en_DE",
+                "deviceToken": "ccti9l74jmc:APA91bH-5W_kG8fmdeAgAhKGxTgoA8SLWeJZcNgPwN8vHgj2uaCxVifq9rjJYEI72dh6S6ntoW4uZsWuN5Kzzead8onl0rBB2EgLYHLixYvkbuz1COgiO9oXPb1DLyMZURapuP7AOTGs",
+                "deviceTokenType": 1,
+                "timestamp": int(time() * 1000)
+        })).json()
+        if response.get("api:statuscode") != 0:
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
+        
+        return response["devOptions"]
+
+    async def fetch_communities(self, start: int = 0, size: int = 25) -> List[Community]:
+        """Fetch a list of communities that the bot is in, this can be used to set tokens for each community
+
+        Parameters
+        ----------
+        start : int, optional
+            start index, by default 0
+        size : int, optional
+            amount of communities to fetch, by default 25
+
+        Returns
+        -------
+        List[Community]
+            List of `Community` objects describing the communities
+        """
+        response = await (
+            await self._http.request(
+                "GET",
+                "/g/s/community/joined",
+                params={
+                    "start": start,
+                    "size": size
+                }
+            )
+        ).json()
+
+        if response.get("api:statuscode") != 0:
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
+        return [Community(**community, client=self) for community in response["communityList"]]

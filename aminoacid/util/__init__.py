@@ -5,7 +5,7 @@ from hmac import HMAC
 
 from .commands import *
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 str_to_ts = lambda _str: int(datetime.strptime(_str, "%Y-%m-%dT%H:%M:%SZ").timestamp())
 """Convert an Amino Timestamp to a UNIX timestamp
@@ -21,6 +21,20 @@ int
     The UNIX timestamp of the given Amino Timestamp
 """
 
+def parse_topic(topic_str: str) -> dict:
+    """Parses a topic string (e.g. "ndtopic:x1:users-start-typing-at:00000000-0000-0000-0000-000000000000")
+
+    Parameters
+    ----------
+    topic_str : str
+        The topic string to parse, this string is split into fields separated by ":"
+
+    Returns
+    -------
+    dict
+        Dictionary containing the scope, topic and extras given in the string
+    """
+    return {key: field for field, key in zip(topic_str.split(":")[1:], ["scope", "topic", "extras"])}
 
 def get_headers(
     data: bytes = b"", device: str = "", key: bytes = b"", v: bytes = b""

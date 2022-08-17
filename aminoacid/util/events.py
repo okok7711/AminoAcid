@@ -25,6 +25,50 @@ async def on_notification(notification: Notification):
     """
     ...
 
+async def on_vc_start(notification: Notification):
+    """This Event will trigger when the socket receives a new Event containing notifType 31
+    containing data will look like this:  
+    ```json
+    {"payload": {
+        "uid": "00000000-0000-0000-0000-000000000000",
+        "notifType": 31,
+        "aps": {
+            "badge": 1,
+            "alert":
+            "person started Live Mode in Private Chat"
+            },
+        "community": {
+            "name": "...",
+            "icon": "http://cm1.narvii.com/..."
+            },
+        "exp": 1660740937,
+        "ndcId": 0,
+        "tid": "00000000-0000-0000-0000-000000000000",
+        "ttype": 0,
+        "id": "00000000-0000-0000-0000-000000000000",
+        "userProfile": {
+            ...
+            }
+    }}
+    ``` 
+    
+    Parameters
+    ----------
+    notification : Notification
+        `Notification` object describing the vc start notification that was received
+    """
+    ...
+
+async def on_vc_invite(notification: Notification):
+    """This Event will trigger when the socket receives a new Event containing notifType 29
+    containing data has the same format as `on_vc_start()`
+
+    Parameters
+    ----------
+    notification : Notification
+        `Notification` object describing the vc invite
+    """
+    ...
 
 async def empty_cb(*args, **kwargs):
     """Empty callback for events, this is called when no event callback is defined by the user"""

@@ -45,7 +45,7 @@ class ActionNotAllowed(AminoBaseException):
     ...
 
 
-def handle_exception(code: int, data=None):
+def handle_exception(code: int, data = None):
     """Puts an Exception with the given error code into the logger with Exception severity
 
     Parameters

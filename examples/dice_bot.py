@@ -1,5 +1,5 @@
 from aminoacid import Bot
-from aminoacid.abc import Message, Context
+from aminoacid.abc import Context
 
 import random
 
@@ -11,8 +11,8 @@ client = Bot(
 
 
 @client.command()
-async def roll(ctx: Context, *nya: str):
-    await ctx.send()
+async def roll(ctx: Context):
+    await ctx.send(f"You rolled a {random.randint(1, 6)}")
 
 
 @client.event()

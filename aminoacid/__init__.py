@@ -33,6 +33,18 @@ json_serialize = (
     if _ORJSON
     else json.dumps(obj)
 )
+"""Function to serialize data with ORJson if its installed, uses built in json module if not
+
+Parameters
+----------
+obj : dict
+    object to serialize
+        
+Returns
+-------
+str
+    serialized json data
+"""
 
 
 class Bot(ApiClient):
@@ -57,7 +69,7 @@ class Bot(ApiClient):
     profile: User
 
     def __init__(
-        self, prefix: str = "/", help_command: Optional[UserCommand] = None, **kwargs
+        self, prefix: str = "/", *, help_command: Optional[UserCommand] = None, **kwargs
     ) -> None:
         self.prefix = prefix
         self.__command_map__: Dict[str, UserCommand] = {
@@ -169,6 +181,7 @@ class Bot(ApiClient):
             self.profile = await self.fetch_user(self._http.session.uid)
         self.socket = sock = SocketClient(self)
         try:
+            await self.set_device()
             await sock.run_loop()
         finally:
             await self.cleanup_loop()

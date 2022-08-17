@@ -4,7 +4,7 @@
 
 ## Why AminoAcid?
 Because other projects like [BotAmino](https://github.com/vedansh5/BotAmino) fail to allow a nicely done, pythonic, completely async hinted experience.  
-This project aims to open up the possibilities that other libraries don't fulfill by being completely async using aiohttp, allowing OOP with the use of BaseModels and dataclasses, allowing events with a discord.py-esque experience.  
+This project aims to open up the possibilities that other libraries don't fulfill by being completely async using aiohttp, allowing OOP, allowing [events](https://okok7711.github.io/AminoAcid/aminoacid/util/events.html) with a discord.py-esque experience.  
 While BotAmino *tries* to be easy to use it fails to provide an easy high-level API by forcing to use [Amino.fix](https://github.com/Minori101/Amino.fix) instead of allowing access via their own methods and objects.
 
 ## How do you use it?
@@ -41,6 +41,23 @@ client.run(
 As you might see, you need to supply your own key to sign the requests with. You can find this in other libraries tho.  
 Please note, that this library is **NOT** finished and a lot of features I want to implement are still missing.
 
+## How to subscribe to topics to get notifications?
+AminoAcid supports receiving notification events via the socket like the normal app would.  
+The notification future still needs a lot of work, because so far it's not receiving events like follow, comment, etc.  
+
+To receive notifications with a certain topic you can it's suggested to send a subscribe object in your on_ready callback
+```python
+...
+
+@client.event()
+async def on_ready():
+    client.logger.info(client._http.session)
+    await client.socket.subscribe(ndcId, topic=topic)
+
+...
+```
+so far known topics are documented in 
+
 ## Why no key?
 The aim of this library is **NOT** to make malicious bots, which is why you need to put the key in yourself.  
 This library should only be used for making fun chat bots.
@@ -60,5 +77,7 @@ This was originally called AminoAcids but then i noticed that the pypi project "
 - [ ] Better quality in code
 - [ ] Complete Exceptions
 - [x] Complete SocketCode Enum
-- [ ] Make the SocketClient subscribe to other events to allow on_follow and on_notification events 
+- [x] Make the SocketClient subscribe to other events to allow on_follow and on_notification events 
 - [x] Finish started but unfinished methods
+- [ ] Cog-like Command categories
+- [ ] on_typing_start, etc. events (socket code 400)

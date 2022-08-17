@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 
 from aiohttp import ClientConnectorError, ClientWebSocketResponse
 
-from .abc import Message
+from .abc import Message, Notification
 from .util import __version__, get_headers
-from .util.enums import MessageTypes, SocketCodes
+from .util.enums import MessageTypes, NotifTypes, SocketCodes
 from .util.events import empty_cb
 
 if TYPE_CHECKING:
@@ -84,6 +84,22 @@ class SocketClient:
         else:
             # TODO: Implement other messageTypes
             ...
+    
+    async def handle_notification(self, notification: Notification):
+        """Handles received notifications
+        All unknown or message notifications will cause `on_notification()` to trigger
+
+        Parameters
+        ----------
+        notification : Notification
+            the notification that was received by the socket to handle
+        """ 
+        _events = {
+            NotifTypes.INVITE_VC: "on_vc_invite",
+            NotifTypes.START_VC: "on_vc_start",
+            NotifTypes.MESSAGE: "on_notification",
+        }
+        await (self.client.events.get(_events.get(notification.type, "on_notification"), empty_cb)(notification))
 
     async def sock_conn(self):
         """While the socket is open, this iterates over all the received messages.
@@ -100,7 +116,7 @@ class SocketClient:
                     )
                 )
             elif event["t"] == SocketCodes.NOTIFICATION:
-                await (self.client.events.get("on_notification", empty_cb)(message))
+                await self.handle_notification(Notification(event["o"]))
             else:
                 self.client.logger.info(
                     f"[{asctime()}] Socket sent unhandled message: {message}"

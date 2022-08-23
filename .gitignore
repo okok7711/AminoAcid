@@ -14,6 +14,7 @@ develop-eggs/
 dist/
 docs/
 test.py
+checks.sh
 downloads/
 eggs/
 .eggs/

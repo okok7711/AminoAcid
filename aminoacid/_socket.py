@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 from aiohttp import ClientConnectorError, ClientWebSocketResponse
 
 from .abc import Message, Notification
-from .util import __version__, get_headers
-from .util.enums import MessageTypes, NotifTypes, SocketCodes
+from .util import __version__, get_headers, parse_topic
+from .util.enums import MessageTypes, NotifTypes, SocketCodes, Topics
 from .util.events import empty_cb
 
 if TYPE_CHECKING:
@@ -95,14 +95,38 @@ class SocketClient:
             the notification that was received by the socket to handle
         """
         _events = {
-            NotifTypes.INVITE_VC: "on_vc_invite",
-            NotifTypes.START_VC: "on_vc_start",
-            NotifTypes.MESSAGE: "on_notification",
+            NotifTypes.INVITE_VC.value: "on_vc_invite",
+            NotifTypes.START_VC.value: "on_vc_start",
+            NotifTypes.MESSAGE.value: "on_notification",
         }
         await (
             self.client.events.get(
                 _events.get(notification.type, "on_notification"), empty_cb
             )(notification)
+        )
+
+    async def handle_livelayer(self, event: dict):
+        """Events that are handled by the livelayer are handled by this
+        
+        NOTE: THIS IS STILL VERY MUCH NOT COMPLETE
+
+        Parameters
+        ----------
+        event : dict
+            event data
+        """
+        _topics = {
+            Topics.START_TYPING.value: "on_start_typing",
+            Topics.END_RECORDING.value: "on_end_typing",
+            Topics.START_RECODING.value: "on_start_recording",
+            Topics.END_RECORDING.value: "on_end_recording",
+            Topics.ONLINE_MEMBERS.value: "on_online_members"
+        }
+        await (
+            self.client.events.get(
+                _topics.get(parse_topic(
+                    event["topic"])["topic"], "on_livelayer"), empty_cb
+            )(event)
         )
 
     async def sock_conn(self):
@@ -112,33 +136,48 @@ class SocketClient:
         async for message in self.socket:
             event = message.json()
             if event["t"] == SocketCodes.MESSAGE:
+                message = Message(
+                    client=self.client,
+                    ndcId=event["o"]["ndcId"],
+                    **event["o"]["chatMessage"],
+                )
                 await self.handle_message(
-                    Message(
-                        client=self.client,
-                        ndcId=event["o"]["ndcId"],
-                        **event["o"]["chatMessage"],
-                    )
+                    message
+                )
+                await self.send(
+                    SocketCodes.MESSAGE_ACK,
+                    {
+                        "ndcId": message.ndcId,
+                        "threadId": message.threadId,
+                        "messageId": message.id,
+                        "markHasRead": True,
+                        "createdTime": event["o"]["chatMessage"]["createdTime"],
+
+                    }
                 )
             elif event["t"] == SocketCodes.NOTIFICATION:
                 await self.handle_notification(Notification(event["o"]))
+            elif event["t"] == SocketCodes.LIVE_LAYER_USER_JOINED_EVENT:
+                await self.handle_livelayer(event["o"])
             else:
                 self.client.logger.info(
                     f"[{asctime()}] Socket sent unhandled message: {message}"
                 )
 
-    async def send(self, code: int, object: dict):
-        await self.socket.send_json({"t": code, "o": object})
+    async def send(self, code: int, obj: dict):
+        self.client.logger.info(f"[{asctime()}] Sending Message to socket: {obj}")
+        await self.socket.send_json({"t": code, "o": {"id": str(round(time() % 86400)), **obj} })
 
     async def subscribe(self, topic: str, *, ndcId: str = ""):
         topic = f"ndtopic:g:{topic}" if not ndcId else f"ndtopic:x{ndcId}:{topic}"
         await self.send(
             SocketCodes.SUBSCRIBE_LIVE_LAYER_REQUEST,
-            {"topic": topic, "ndcId": ndcId, "id": "82333"},
+            {"topic": topic, "ndcId": ndcId},
         )
 
     async def unsubscribe(self, topic: str, *, ndcId: str = ""):
         topic = f"ndtopic:g:{topic}" if not ndcId else f"ndtopic:x{ndcId}:{topic}"
         await self.send(
             SocketCodes.UNSUBSCRIBE_LIVE_LAYER_REQUEST,
-            {"topic": topic, "ndcId": ndcId, "id": "82333"},
+            {"topic": topic, "ndcId": ndcId},
         )

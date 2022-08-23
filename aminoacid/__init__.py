@@ -5,6 +5,7 @@ import asyncio
 from functools import wraps
 from importlib.util import find_spec
 from logging import Logger, getLogger
+from secrets import token_urlsafe
 from shlex import split
 from time import asctime
 from typing import Any, Callable, Coroutine, Dict, List, Optional, TypeVar
@@ -87,6 +88,7 @@ class Bot(ApiClient):
         *,
         check: Optional[Callable[[Context], bool]] = lambda _: True,
         check_any: Optional[List[Callable[[Context], bool]]] = [],
+        cooldown: Optional[int] = 0,
     ):
         """Wrapper to register commands to the bot
 
@@ -94,15 +96,21 @@ class Bot(ApiClient):
         ----------
         name : str, optional
             Name that the command should listen on, by default the name of the function
+        check : Optional[Callable[[Context], bool]], optional
+            function to check whether the command may be executed, by default always returns True
+        check_any : Optional[List[Callable[[Context], bool]]], optional
+            list of checks of which any need to pass, by default []
+        cooldown : Optional[int], optional
+            cooldown before someone can use the command again, by default 0
         """
 
         def wrap(f: Callable[..., Coroutine[Any, Any, T]]):
             @wraps(f)
-            def func(*args, **kwargs):
+            def func():
                 if (name or f.__name__) in self.__command_map__:
                     return self.logger.exception(CommandExists(name))
                 self.__command_map__[name or f.__name__] = UserCommand(
-                    func=f, command_name=name, check=check, check_any=check_any
+                    func=f, command_name=name, check=check, check_any=check_any, cooldown=cooldown,
                 )
 
             return func()
@@ -136,7 +144,6 @@ class Bot(ApiClient):
         password: Optional[str] = "",
         *,
         session: str = "",
-        **kwargs,
     ):
         """Run the `main_loop()` of the bot and initiate authentication
 
@@ -198,9 +205,10 @@ class Bot(ApiClient):
             return
         args = split(message.content[len(self.prefix) :])
         if args[0] in self.__command_map__:
-            await self.__command_map__[args.pop(0)](
+            cmd = self.__command_map__[args.pop(0)](
                 Context(client=self, message=message), *args
             )
+            if cmd: await cmd
         else:
             self.logger.exception(CommandNotFound(message))
 
@@ -218,6 +226,8 @@ class HttpClient(ClientSession):
         self.key: bytes = kwargs.pop("key")
         self.device: str = kwargs.pop("device")
         self.v: bytes = kwargs.pop("v", b"\x42")
+        self.token: str = token_urlsafe(152)
+        """pushToken for notification sending, randomly generated"""
 
         self.logger = logger
 

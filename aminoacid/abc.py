@@ -108,6 +108,8 @@ class Context(MessageAble):
         self.message = message
         self.thread = message.thread
         self.author = message.author
+        
+        super().__init__(bot=client)
 
     async def reply(self, content: str, **kwargs):
         """Replies to the message described by the context (`self.message`)
@@ -186,7 +188,6 @@ class User(MessageAble):
         self.client = data.pop("client")
 
     async def send(self, content: str, **kwargs) -> Message:
-        # TODO: Implement this, and allow sending Messages via User Object
         return await super().send(content, **kwargs)
 
     async def get(self) -> User:
@@ -299,6 +300,8 @@ class Thread(MessageAble):
     author: User
     ndcId: Optional[int] = None
     title: str
+    
+    # TODO: FINISH THIS
 
     def __init__(self, data: dict = {}, **kwargs) -> None:
         """Initialises a new `Thread` object, calls `from_dict()` with a combination of the kwargs and the supplied data
@@ -465,6 +468,10 @@ class Frame(AminoBaseClass):
     # TODO: Add Frame class for OOP
     ...
 
+class Bubble(AminoBaseClass):
+    # TODO: Same as Frame
+    ...
+
 
 class Notification(AminoBaseClass):
     payload: dict
@@ -517,7 +524,8 @@ class Session(AminoBaseClass):
 
         super().__init__()
 
-    def deserialize_session(self, session: str) -> dict:
+    @staticmethod
+    def deserialize_session(session: str) -> dict:
         """Takes all the info from a given session
 
         Parameters

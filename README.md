@@ -80,4 +80,5 @@ This was originally called AminoAcids but then i noticed that the pypi project "
 - [x] Make the SocketClient subscribe to other events to allow on_follow and on_notification events 
 - [x] Finish started but unfinished methods
 - [ ] Cog-like Command categories
-- [ ] on_typing_start, etc. events (socket code 400)
+- [X] on_typing_start, etc. events (socket code 400)
+- [ ] Command error handlers

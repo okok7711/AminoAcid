@@ -312,7 +312,7 @@ class ApiClient(AminoBaseClass):
                     "timezone": 60,
                     "systemPushEnabled": True,
                     "locale": "en_DE",
-                    "deviceToken": "ccti9l74jmc:APA91bH-5W_kG8fmdeAgAhKGxTgoA8SLWeJZcNgPwN8vHgj2uaCxVifq9rjJYEI72dh6S6ntoW4uZsWuN5Kzzead8onl0rBB2EgLYHLixYvkbuz1COgiO9oXPb1DLyMZURapuP7AOTGs",
+                    "deviceToken": self._http.token,
                     "deviceTokenType": 1,
                     "timestamp": int(time() * 1000),
                 },

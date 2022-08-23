@@ -5,7 +5,7 @@ from hmac import HMAC
 
 from .commands import *
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 str_to_ts = lambda _str: int(datetime.strptime(_str, "%Y-%m-%dT%H:%M:%SZ").timestamp())
 """Convert an Amino Timestamp to a UNIX timestamp

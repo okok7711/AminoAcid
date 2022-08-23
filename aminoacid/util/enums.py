@@ -6,7 +6,7 @@ class SocketCodes(IntEnum):
 
     MESSAGE = 1000
     NOTIFICATION = 10
-    
+
     MESSAGE_ACK = 1001
 
     AGORA_TOKEN_REQUEST = 200
@@ -86,8 +86,8 @@ class SocketCodes(IntEnum):
 
 
 class NotifTypes(IntEnum):
-    """IntEnum containing possible notification types that the socket will return when the sokcet code is 10
-    """
+    """IntEnum containing possible notification types that the socket will return when the sokcet code is 10"""
+
     MESSAGE = 18
     START_VC = 31
     INVITE_VC = 29
@@ -95,8 +95,8 @@ class NotifTypes(IntEnum):
 
 
 class MessageTypes(IntEnum):
-    """IntEnum containing the possible types a message can have
-    """
+    """IntEnum containing the possible types a message can have"""
+
     TEXT = 0
     STRIKE_MESSAGE = 1
     VOICE_MESSAGE = 2
@@ -146,8 +146,8 @@ class MessageTypes(IntEnum):
 
 
 class Topics(Enum):
-    """Enum containing the possible events a user could subscribe to
-    """
+    """Enum containing the possible events a user could subscribe to"""
+
     START_TYPING = "users-start-typing-at"
     END_TYPING = "users-end-typing-at"
 

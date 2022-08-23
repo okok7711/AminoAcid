@@ -7,6 +7,7 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
+
 async def on_message(message: Message):
     """This Event will trigger when a new text message is received, it will only be called if the message is not a command
 
@@ -74,7 +75,8 @@ async def on_vc_invite(notification: Notification):
         `Notification` object describing the vc invite
     """
     ...
- 
+
+
 async def on_start_typing(event: dict):
     """Event for when a user starts typing in a given chat
     `event` structure:
@@ -98,6 +100,7 @@ async def on_start_typing(event: dict):
     """
     ...
 
+
 async def on_end_typing(event: dict):
     """Same as `on_start_typing()` only that this is for when the user stops typing
 
@@ -107,6 +110,7 @@ async def on_end_typing(event: dict):
         the event that was sent
     """
     ...
+
 
 async def on_start_recording(event: dict):
     """Same as `on_start_typing()` only that this is for when the user starts recording a vm
@@ -118,6 +122,7 @@ async def on_start_recording(event: dict):
     """
     ...
 
+
 async def on_end_recording(event: dict):
     """Same as `on_start_typing()` only that this is for when the user stops recording a vm
 
@@ -128,9 +133,10 @@ async def on_end_recording(event: dict):
     """
     ...
 
+
 async def on_online_members(event: dict):
     """Event triggered when a user comes online and joins the livelayer
-    
+
     NOTE: Currently subscribing to the livelayer is very weird and this event doesn't always get triggered,
     if you want to help with research please DM me on discord (okok#7711)!!
 
@@ -147,7 +153,7 @@ async def on_online_members(event: dict):
         ]
     }
     ```
-    
+
     Parameters
     ----------
     event : dict

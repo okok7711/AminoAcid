@@ -107,7 +107,7 @@ class SocketClient:
 
     async def handle_livelayer(self, event: dict):
         """Events that are handled by the livelayer are handled by this
-        
+
         NOTE: THIS IS STILL VERY MUCH NOT COMPLETE
 
         Parameters
@@ -120,12 +120,12 @@ class SocketClient:
             Topics.END_RECORDING.value: "on_end_typing",
             Topics.START_RECODING.value: "on_start_recording",
             Topics.END_RECORDING.value: "on_end_recording",
-            Topics.ONLINE_MEMBERS.value: "on_online_members"
+            Topics.ONLINE_MEMBERS.value: "on_online_members",
         }
         await (
             self.client.events.get(
-                _topics.get(parse_topic(
-                    event["topic"])["topic"], "on_livelayer"), empty_cb
+                _topics.get(parse_topic(event["topic"])["topic"], "on_livelayer"),
+                empty_cb,
             )(event)
         )
 
@@ -141,9 +141,7 @@ class SocketClient:
                     ndcId=event["o"]["ndcId"],
                     **event["o"]["chatMessage"],
                 )
-                await self.handle_message(
-                    message
-                )
+                await self.handle_message(message)
                 await self.send(
                     SocketCodes.MESSAGE_ACK,
                     {
@@ -152,8 +150,7 @@ class SocketClient:
                         "messageId": message.id,
                         "markHasRead": True,
                         "createdTime": event["o"]["chatMessage"]["createdTime"],
-
-                    }
+                    },
                 )
             elif event["t"] == SocketCodes.NOTIFICATION:
                 await self.handle_notification(Notification(event["o"]))
@@ -166,7 +163,9 @@ class SocketClient:
 
     async def send(self, code: int, obj: dict):
         self.client.logger.info(f"[{asctime()}] Sending Message to socket: {obj}")
-        await self.socket.send_json({"t": code, "o": {"id": str(round(time() % 86400)), **obj} })
+        await self.socket.send_json(
+            {"t": code, "o": {"id": str(round(time() % 86400)), **obj}}
+        )
 
     async def subscribe(self, topic: str, *, ndcId: str = ""):
         topic = f"ndtopic:g:{topic}" if not ndcId else f"ndtopic:x{ndcId}:{topic}"

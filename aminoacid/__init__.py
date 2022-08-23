@@ -110,7 +110,11 @@ class Bot(ApiClient):
                 if (name or f.__name__) in self.__command_map__:
                     return self.logger.exception(CommandExists(name))
                 self.__command_map__[name or f.__name__] = UserCommand(
-                    func=f, command_name=name, check=check, check_any=check_any, cooldown=cooldown,
+                    func=f,
+                    command_name=name,
+                    check=check,
+                    check_any=check_any,
+                    cooldown=cooldown,
                 )
 
             return func()
@@ -208,7 +212,8 @@ class Bot(ApiClient):
             cmd = self.__command_map__[args.pop(0)](
                 Context(client=self, message=message), *args
             )
-            if cmd: await cmd
+            if cmd:
+                await cmd
         else:
             self.logger.exception(CommandNotFound(message))
 

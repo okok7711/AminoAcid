@@ -54,7 +54,7 @@ class UserCommand:
         self.check_any = check_any
         self.cooldown = cooldown
         self.name = command_name or func.__name__
-        
+
         self.calls = {}
 
     def get_signature(self) -> str:
@@ -92,7 +92,9 @@ class UserCommand:
                 result.append(f"<{name}>")
         return " ".join(result)
 
-    def __call__(self, context: Context, *args: Any, **kwargs: Any) -> Coroutine[Any, Any, T]:
+    def __call__(
+        self, context: Context, *args: Any, **kwargs: Any
+    ) -> Coroutine[Any, Any, T]:
         """Allow the Command to be executed by calling the UserCommand instance.
         like `await UserCommand()`
 
@@ -106,12 +108,15 @@ class UserCommand:
         T
             returns the Callback return value
         """
-        
-        if not any(check(context) for check in self.check_any or [lambda _: True]) or not self.check(
-            context
-        ):
+
+        if not any(
+            check(context) for check in self.check_any or [lambda _: True]
+        ) or not self.check(context):
             return context.client.logger.exception(CheckFailed(context))
-        if ((current_time := int(time())) <= self.calls.get(context.author.id, 0) + self.cooldown): return
+        if (current_time := int(time())) <= self.calls.get(
+            context.author.id, 0
+        ) + self.cooldown:
+            return
         self.calls[context.author.id] = current_time
         context.client.logger.warning((self.calls, self.cooldown))
         return self.callback(context, *args, **kwargs)

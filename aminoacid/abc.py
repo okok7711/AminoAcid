@@ -108,7 +108,7 @@ class Context(MessageAble):
         self.message = message
         self.thread = message.thread
         self.author = message.author
-        
+
         super().__init__(bot=client)
 
     async def reply(self, content: str, **kwargs):
@@ -300,7 +300,7 @@ class Thread(MessageAble):
     author: User
     ndcId: Optional[int] = None
     title: str
-    
+
     # TODO: FINISH THIS
 
     def __init__(self, data: dict = {}, **kwargs) -> None:
@@ -467,6 +467,7 @@ class linkSnippet(AminoBaseClass):
 class Frame(AminoBaseClass):
     # TODO: Add Frame class for OOP
     ...
+
 
 class Bubble(AminoBaseClass):
     # TODO: Same as Frame

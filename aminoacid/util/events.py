@@ -1,9 +1,12 @@
 """This file is for documentation only, it contains all of the possible events the bot can listen on
 """
-
-from ..abc import Message, Notification
+from __future__ import annotations
 
 from logging import getLogger
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..abc import Message, Notification
 
 logger = getLogger(__name__)
 

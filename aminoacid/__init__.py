@@ -15,7 +15,7 @@ from aiohttp import ClientResponse, ClientSession
 from ._socket import SocketClient
 from .abc import _ORJSON, Context, Message, Session, User, json
 from .client import ApiClient
-from .exceptions import CommandExists, CommandNotFound
+from .exceptions import AminoBaseException, CommandExists, CommandNotFound
 from .util import HelpCommand, UserCommand, __version__, get_headers
 
 __author__ = "okok7711"
@@ -102,20 +102,26 @@ class Bot(ApiClient):
             list of checks of which any need to pass, by default []
         cooldown : Optional[int], optional
             cooldown before someone can use the command again, by default 0
+        
+        Returns
+        -------
+        UserCommand
+            returns the command to register error handlers etc.
         """
 
         def wrap(f: Callable[..., Coroutine[Any, Any, T]]):
             @wraps(f)
-            def func():
+            def func() -> UserCommand:
                 if (name or f.__name__) in self.__command_map__:
                     return self.logger.exception(CommandExists(name))
-                self.__command_map__[name or f.__name__] = UserCommand(
+                self.__command_map__[name or f.__name__] = (cmd := UserCommand(
                     func=f,
                     command_name=name,
                     check=check,
                     check_any=check_any,
                     cooldown=cooldown,
-                )
+                ))
+                return cmd
 
             return func()
 
@@ -133,7 +139,7 @@ class Bot(ApiClient):
 
         def wrap(f: Callable):
             @wraps(f)
-            def func(*args, **kwargs):
+            def func():
                 if (name or f.__name__) in self.events:
                     return
                 self.events[name or f.__name__] = f
@@ -209,11 +215,14 @@ class Bot(ApiClient):
             return
         args = split(message.content[len(self.prefix) :])
         if args[0] in self.__command_map__:
-            cmd = self.__command_map__[args.pop(0)](
-                Context(client=self, message=message), *args
+            coro = (cmd := self.__command_map__[args.pop(0)])(
+                (ctx:= Context(client=self, message=message)), *args
             )
-            if cmd:
-                await cmd
+            if coro:
+                try: await coro
+                except AminoBaseException as exc:
+                    if cmd.handler: await cmd.handler(exc, ctx)
+                    else: self.logger.exception(exc)
         else:
             self.logger.exception(CommandNotFound(message))
 

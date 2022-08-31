@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from random import randint
 from time import asctime, time
 from typing import TYPE_CHECKING
 
@@ -47,7 +48,7 @@ class SocketClient:
         ]
         try:
             self.socket = await self.http.ws_connect(
-                url=f"wss://ws1.narvii.com/?signbody={sign}",
+                url=f"wss://ws{randint(1, 4)}.narvii.com/?signbody={sign}",
                 headers={
                     "NDC-MSG-SIG": sig,
                     "NDCDEVICEID": self.http.device,

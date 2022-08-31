@@ -81,4 +81,4 @@ This was originally called AminoAcids but then i noticed that the pypi project "
 - [x] Finish started but unfinished methods
 - [ ] Cog-like Command categories
 - [X] on_typing_start, etc. events (socket code 400)
-- [ ] Command error handlers
+- [X] Command error handlers

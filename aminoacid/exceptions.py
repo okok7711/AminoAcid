@@ -54,7 +54,7 @@ def handle_exception(code: int, data=None):
         The api:statuscode
     """
     # TODO: Complete this list
-    logger.exception(
+    raise (
         {
             106: AccessDenied,
             103: InvalidRequest,

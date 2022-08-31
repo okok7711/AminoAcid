@@ -1,6 +1,7 @@
 from os import PathLike
 from time import time
 from typing import BinaryIO, List, Optional, Union
+from uuid import uuid4
 
 from . import exceptions
 from .abc import (
@@ -12,6 +13,7 @@ from .abc import (
     Thread,
     User,
     Community,
+    Blog,
 )
 
 
@@ -352,3 +354,62 @@ class ApiClient(AminoBaseClass):
             Community(**community, client=self)
             for community in response["communityList"]
         ]
+
+    async def fetch_blogs(self, ndcId: str, start: int = 0, size: int = 25, *, userId: Optional[str] = "") -> List[Blog]:
+        """Fetches blogs by user or community if no user is supplied
+
+        Parameters
+        ----------
+        ndcId : Optional[str], optional
+            the community id, by default ""
+        start : int, optional
+            offset to start at, by default 0
+        size : int, optional
+            amount of blogs to get, by default 25
+        userId : Optional[str], optional
+            the id of the user, by default ""
+        """
+        params = {
+            "start": start,
+            "size": size,
+            "url": f"/x{ndcId}/s/blog" if userId else f"/x{ndcId}/s/feed/blog-all",
+            **({"type": "user", "q":  userId} if userId else {})
+            }
+        response = await (
+            await self._http.request(
+                "GET", params.pop("url"), params=params
+            )
+        ).json()
+
+        if response.get("api:statuscode") != 0:
+            return exceptions.handle_exception(response.get("api:statuscode"), response)
+        return [
+            Blog(**blog, client=self)
+            for blog in response["blogList"]
+        ]
+        
+    async def tip_blog(self, ndcId: str, blogId: str, amount: int):
+        """Sends coins to a blog
+
+        Parameters
+        ----------
+        ndcId : str
+            community id that the blog is in
+        blogId : str
+            id of the blog
+        amount : int
+            the amount of coins to send
+        """
+        response = await (
+            await self._http.request(
+                "POST",
+                f"/x{ndcId}/s/blog/{blogId}/tipping",
+                json={
+                    "coins": amount,
+                    "tippingContext": {"transactionId": str(uuid4())},
+                    "timestamp": int(time() * 1000)
+                },
+            )
+        ).json()
+        if response.get("api:statuscode") != 0:
+            return exceptions.handle_exception(response.get("api:statuscode"), response)

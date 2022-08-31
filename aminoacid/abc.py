@@ -220,12 +220,22 @@ class Member(User):
         self.ndcId = data.pop("ndcId")
         return super().from_dict(data)
 
+    async def fetch_blogs(self) -> List[Blog]:
+        """Returns a list of blogs the user made
+
+        Returns
+        -------
+        List[Blog]
+            List of blogs
+        """
+        return await self.client.fetch_blogs(self.ndcId, userId=self.id)
+
 
 class Message(AminoBaseClass):
     id: str
     type: int
     content: str
-    author: User
+    author: Union[User, Member]
     threadId: str
     ndcId: Optional[int] = None
     isHidden: bool
@@ -327,7 +337,7 @@ class Thread(MessageAble):
         self.title = data.pop("title", "")
         self.content = data.pop("content", "")
         self.author = data.pop("author", "")
-        self.id = data.pop("threadId", "")
+        self.id = data.pop("threadId", "") or data.pop("id", "")
         self.ndcId = data.pop("ndcId", "")
 
     async def send(self, content: str, **kwargs) -> Message:
@@ -392,6 +402,64 @@ class Community(AminoBaseClass):
         self.id = data.pop("ndcId", "")
 
 
+class Blog(AminoBaseClass):
+    createdTime: int
+    mediaList: list
+    type: int
+    status: int
+    modifiedTime: int
+    id: str
+    ndcId: str
+    title: str
+    content: str
+    author: Member
+    
+    client: Bot
+    
+    def __init__(self, data: dict = {}, **kwargs) -> None:
+        """Initialises a new `Blog` object, calls `from_dict()` with a combination of the kwargs and the supplied data
+
+        Parameters
+        ----------
+        data : dict, optional
+            The data to initialise the `Blog` with, by default {}
+        """
+        self.from_dict({**data, **kwargs})
+        super().__init__()
+
+    def from_dict(self, data: dict):
+        """Create a new `Blog` object from a dict
+
+        Parameters
+        ----------
+        data : dict
+            The dict to create the new `Blog` object from
+        """
+        self.client = data.pop("client")
+
+        self.title = data.pop("title", "")
+        self.id = data.pop("blogId", "") or data.pop("id", "")
+        self.ndcId = data.pop("ndcId", "")
+        self.author = Member(
+                data.pop("author", {}), client=self.client, ndcId=self.ndcId
+            )
+        self.content = data.pop("content", "")
+        self.createdTime = str_to_ts(data.pop("createdTime", ""))
+        self.modifiedTime = str_to_ts(data.pop("modifiedTime", ""))
+        self.mediaList = data.pop("mediaList", [])
+        self.status = data.pop("status", "")
+        self.type = data.pop("type")
+        
+    async def tip(self, amount: int):
+        """Send coins to a blog, shortcut to `aminoacid.client.ApiClient.tip_blog()`
+
+        Parameters
+        ----------
+        amount : int
+            amount of coins to send
+        """
+        await self.client.tip_blog(self.ndcId, self.id, amount)
+        
 class Embed(AminoBaseClass):
     def __init__(
         self,

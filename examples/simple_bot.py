@@ -13,10 +13,12 @@ client = Bot(
 async def hi(ctx: Context, *nya: str):
     await ctx.reply(" ".join(nya))
 
-@client.command(cooldown=1440*60)
+
+@client.command(cooldown=1440 * 60)
 async def claim(ctx: Context):
     blogs = await ctx.author.fetch_blogs()
-    if not blogs: return await ctx.reply("You don't have any blogs!")
+    if not blogs:
+        return await ctx.reply("You don't have any blogs!")
     await blogs[0].tip(100)
     await ctx.reply("Check in tmrw again!!")
 
@@ -24,6 +26,7 @@ async def claim(ctx: Context):
 @claim.error()
 async def claim_errorr(exc: AminoBaseException, ctx: Context):
     await ctx.send(f"An error occurred: {exc}")
+
 
 @client.event("on_message")
 async def on_message(message: Message):

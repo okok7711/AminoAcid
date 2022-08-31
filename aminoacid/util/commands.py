@@ -57,7 +57,9 @@ class UserCommand:
         self.cooldown = cooldown
         self.name = command_name or func.__name__
 
-        self.handler: Callable[[AminoBaseException, Context], Coroutine[Any, Any, T]] = empty_cb
+        self.handler: Callable[
+            [AminoBaseException, Context], Coroutine[Any, Any, T]
+        ] = empty_cb
         """Handler containing a function to handle exceptions raised
         
         Parameters
@@ -68,19 +70,22 @@ class UserCommand:
             The context of the command
         """
         self.calls = {}
-    
-    
+
     def error(self):
-        """Register a function to be the error handler of this command, calls `self.register_handler()`
-        """
+        """Register a function to be the error handler of this command, calls `self.register_handler()`"""
+
         def wrap(f: Callable[[AminoBaseException, Context], Coroutine[Any, Any, T]]):
             @wraps(f)
             def func(self: UserCommand):
                 self.register_handler(f)
+
             return func(self)
+
         return wrap
-    
-    def register_handler(self, func: Callable[[AminoBaseException, Context], Coroutine[Any, Any, T]]):
+
+    def register_handler(
+        self, func: Callable[[AminoBaseException, Context], Coroutine[Any, Any, T]]
+    ):
         """Register a given function as a handler, this is used by the error decorator
 
         Parameters

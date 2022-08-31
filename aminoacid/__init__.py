@@ -102,7 +102,7 @@ class Bot(ApiClient):
             list of checks of which any need to pass, by default []
         cooldown : Optional[int], optional
             cooldown before someone can use the command again, by default 0
-        
+
         Returns
         -------
         UserCommand
@@ -114,13 +114,15 @@ class Bot(ApiClient):
             def func() -> UserCommand:
                 if (name or f.__name__) in self.__command_map__:
                     return self.logger.exception(CommandExists(name))
-                self.__command_map__[name or f.__name__] = (cmd := UserCommand(
-                    func=f,
-                    command_name=name,
-                    check=check,
-                    check_any=check_any,
-                    cooldown=cooldown,
-                ))
+                self.__command_map__[name or f.__name__] = (
+                    cmd := UserCommand(
+                        func=f,
+                        command_name=name,
+                        check=check,
+                        check_any=check_any,
+                        cooldown=cooldown,
+                    )
+                )
                 return cmd
 
             return func()
@@ -216,13 +218,16 @@ class Bot(ApiClient):
         args = split(message.content[len(self.prefix) :])
         if args[0] in self.__command_map__:
             coro = (cmd := self.__command_map__[args.pop(0)])(
-                (ctx:= Context(client=self, message=message)), *args
+                (ctx := Context(client=self, message=message)), *args
             )
             if coro:
-                try: await coro
+                try:
+                    await coro
                 except AminoBaseException as exc:
-                    if cmd.handler: await cmd.handler(exc, ctx)
-                    else: self.logger.exception(exc)
+                    if cmd.handler:
+                        await cmd.handler(exc, ctx)
+                    else:
+                        self.logger.exception(exc)
         else:
             self.logger.exception(CommandNotFound(message))
 

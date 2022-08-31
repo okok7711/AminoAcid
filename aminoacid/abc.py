@@ -413,9 +413,9 @@ class Blog(AminoBaseClass):
     title: str
     content: str
     author: Member
-    
+
     client: Bot
-    
+
     def __init__(self, data: dict = {}, **kwargs) -> None:
         """Initialises a new `Blog` object, calls `from_dict()` with a combination of the kwargs and the supplied data
 
@@ -441,15 +441,15 @@ class Blog(AminoBaseClass):
         self.id = data.pop("blogId", "") or data.pop("id", "")
         self.ndcId = data.pop("ndcId", "")
         self.author = Member(
-                data.pop("author", {}), client=self.client, ndcId=self.ndcId
-            )
+            data.pop("author", {}), client=self.client, ndcId=self.ndcId
+        )
         self.content = data.pop("content", "")
         self.createdTime = str_to_ts(data.pop("createdTime", ""))
         self.modifiedTime = str_to_ts(data.pop("modifiedTime", ""))
         self.mediaList = data.pop("mediaList", [])
         self.status = data.pop("status", "")
         self.type = data.pop("type")
-        
+
     async def tip(self, amount: int):
         """Send coins to a blog, shortcut to `aminoacid.client.ApiClient.tip_blog()`
 
@@ -459,7 +459,8 @@ class Blog(AminoBaseClass):
             amount of coins to send
         """
         await self.client.tip_blog(self.ndcId, self.id, amount)
-        
+
+
 class Embed(AminoBaseClass):
     def __init__(
         self,

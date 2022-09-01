@@ -77,83 +77,83 @@ class AccountDoesntExist(AminoBaseException):
     ...
 
 
-class CantFollowYourself(AminoBaseException): 
+class CantFollowYourself(AminoBaseException):
     ...
 
 
-class UserUnavailable(AminoBaseException): 
+class UserUnavailable(AminoBaseException):
     ...
 
 
-class YouAreBanned(AminoBaseException): 
+class YouAreBanned(AminoBaseException):
     ...
 
 
-class UserNotMemberOfCommunity(AminoBaseException): 
+class UserNotMemberOfCommunity(AminoBaseException):
     ...
 
 
-class RequestRejected(AminoBaseException): 
+class RequestRejected(AminoBaseException):
     ...
 
 
-class ActivateAccount(AminoBaseException): 
+class ActivateAccount(AminoBaseException):
     ...
 
 
-class CantLeaveCommunity(AminoBaseException): 
+class CantLeaveCommunity(AminoBaseException):
     ...
 
 
-class ReachedTitleLength(AminoBaseException): 
+class ReachedTitleLength(AminoBaseException):
     ...
 
 
-class EmailFlaggedAsSpam(AminoBaseException): 
+class EmailFlaggedAsSpam(AminoBaseException):
     ...
 
 
-class AccountDeleted(AminoBaseException): 
+class AccountDeleted(AminoBaseException):
     ...
 
 
-class API_ERR_EMAIL_NO_PASSWORD(AminoBaseException): 
+class API_ERR_EMAIL_NO_PASSWORD(AminoBaseException):
     ...
 
 
-class API_ERR_COMMUNITY_USER_CREATED_COMMUNITIES_VERIFY(AminoBaseException): 
+class API_ERR_COMMUNITY_USER_CREATED_COMMUNITIES_VERIFY(AminoBaseException):
     ...
 
 
-class ReachedMaxTitles(AminoBaseException): 
+class ReachedMaxTitles(AminoBaseException):
     ...
 
 
-class VerificationRequired(AminoBaseException): 
+class VerificationRequired(AminoBaseException):
     ...
 
 
-class API_ERR_INVALID_AUTH_NEW_DEVICE_LINK(AminoBaseException): 
+class API_ERR_INVALID_AUTH_NEW_DEVICE_LINK(AminoBaseException):
     ...
 
 
-class CommandCooldown(AminoBaseException): 
+class CommandCooldown(AminoBaseException):
     ...
 
 
-class UserBannedByTeamAmino(AminoBaseException): 
+class UserBannedByTeamAmino(AminoBaseException):
     ...
 
 
-class BadImage(AminoBaseException): 
+class BadImage(AminoBaseException):
     ...
 
 
-class InvalidThemepack(AminoBaseException): 
+class InvalidThemepack(AminoBaseException):
     ...
 
 
-class InvalidVoiceNote(AminoBaseException): 
+class InvalidVoiceNote(AminoBaseException):
     ...
 
 
@@ -161,139 +161,139 @@ class RequestedNoLongerExist(AminoBaseException):
     ...
 
 
-class PageRepostedTooRecently(AminoBaseException): 
+class PageRepostedTooRecently(AminoBaseException):
     ...
 
 
-class InsufficientLevel(AminoBaseException): 
+class InsufficientLevel(AminoBaseException):
     ...
 
 
-class WallCommentingDisabled(AminoBaseException): 
+class WallCommentingDisabled(AminoBaseException):
     ...
 
 
-class CommunityNoLongerExists(AminoBaseException): 
+class CommunityNoLongerExists(AminoBaseException):
     ...
 
 
-class InvalidCodeOrLink(AminoBaseException): 
+class InvalidCodeOrLink(AminoBaseException):
     ...
 
 
-class CommunityNameAlreadyTaken(AminoBaseException): 
+class CommunityNameAlreadyTaken(AminoBaseException):
     ...
 
 
-class CommunityCreateLimitReached(AminoBaseException): 
+class CommunityCreateLimitReached(AminoBaseException):
     ...
 
 
-class CommunityDisabled(AminoBaseException): 
+class CommunityDisabled(AminoBaseException):
     ...
 
 
-class CommunityDeleted(AminoBaseException): 
+class CommunityDeleted(AminoBaseException):
     ...
 
 
-class ReachedMaxCategories(AminoBaseException): 
+class ReachedMaxCategories(AminoBaseException):
     ...
 
 
-class DuplicatePollOption(AminoBaseException): 
+class DuplicatePollOption(AminoBaseException):
     ...
 
 
-class ReachedMaxPollOptions(AminoBaseException): 
+class ReachedMaxPollOptions(AminoBaseException):
     ...
 
 
-class TooManyChats(AminoBaseException): 
+class TooManyChats(AminoBaseException):
     ...
 
 
-class ChatFull(AminoBaseException): 
+class ChatFull(AminoBaseException):
     ...
 
 
-class TooManyInviteUsers(AminoBaseException): 
+class TooManyInviteUsers(AminoBaseException):
     ...
 
 
-class ChatInvitesDisabled(AminoBaseException): 
+class ChatInvitesDisabled(AminoBaseException):
     ...
 
 
-class RemovedFromChat(AminoBaseException): 
+class RemovedFromChat(AminoBaseException):
     ...
 
 
-class UserNotJoined(AminoBaseException): 
+class UserNotJoined(AminoBaseException):
     ...
 
 
-class API_ERR_CHAT_VVCHAT_NO_MORE_REPUTATIONS(AminoBaseException): 
+class API_ERR_CHAT_VVCHAT_NO_MORE_REPUTATIONS(AminoBaseException):
     ...
 
 
-class MemberKickedByOrganizer(AminoBaseException): 
+class MemberKickedByOrganizer(AminoBaseException):
     ...
 
 
-class LevelFiveRequiredToEnableProps(AminoBaseException): 
+class LevelFiveRequiredToEnableProps(AminoBaseException):
     ...
 
 
-class ChatViewOnly(AminoBaseException): 
+class ChatViewOnly(AminoBaseException):
     ...
 
 
-class ChatMessageTooBig(AminoBaseException): 
+class ChatMessageTooBig(AminoBaseException):
     ...
 
 
-class InviteCodeNotFound(AminoBaseException): 
+class InviteCodeNotFound(AminoBaseException):
     ...
 
 
-class AlreadyRequestedJoinCommunity(AminoBaseException): 
+class AlreadyRequestedJoinCommunity(AminoBaseException):
     ...
 
 
-class API_ERR_PUSH_SERVER_LIMITATION_APART(AminoBaseException): 
+class API_ERR_PUSH_SERVER_LIMITATION_APART(AminoBaseException):
     ...
 
 
-class API_ERR_PUSH_SERVER_LIMITATION_COUNT(AminoBaseException): 
+class API_ERR_PUSH_SERVER_LIMITATION_COUNT(AminoBaseException):
     ...
 
 
-class API_ERR_PUSH_SERVER_LINK_NOT_IN_COMMUNITY(AminoBaseException): 
+class API_ERR_PUSH_SERVER_LINK_NOT_IN_COMMUNITY(AminoBaseException):
     ...
 
 
-class API_ERR_PUSH_SERVER_LIMITATION_TIME(AminoBaseException): 
+class API_ERR_PUSH_SERVER_LIMITATION_TIME(AminoBaseException):
     ...
 
 
-class AlreadyCheckedIn(AminoBaseException): 
+class AlreadyCheckedIn(AminoBaseException):
     ...
 
 
-class AlreadyUsedMonthlyRepair(AminoBaseException): 
+class AlreadyUsedMonthlyRepair(AminoBaseException):
     ...
 
 
-class AccountAlreadyRestored(AminoBaseException): 
+class AccountAlreadyRestored(AminoBaseException):
     ...
 
 
-class IncorrectVerificationCode(AminoBaseException): 
+class IncorrectVerificationCode(AminoBaseException):
     ...
 
 
-class NotOwnerOfChatBubble(AminoBaseException): 
+class NotOwnerOfChatBubble(AminoBaseException):
     ...
 
 
@@ -301,7 +301,7 @@ class NotEnoughCoins(AminoBaseException):
     ...
 
 
-class AlreadyPlayedLottery(AminoBaseException): 
+class AlreadyPlayedLottery(AminoBaseException):
     ...
 
 
@@ -309,17 +309,16 @@ class CannotSendCoins(AminoBaseException):
     ...
 
 
-class AminoIDAlreadyChanged(AminoBaseException): 
+class AminoIDAlreadyChanged(AminoBaseException):
     ...
 
 
-class InvalidAminoID(AminoBaseException): 
+class InvalidAminoID(AminoBaseException):
     ...
 
 
-class InvalidName(AminoBaseException): 
+class InvalidName(AminoBaseException):
     ...
-
 
 
 def handle_exception(code: int, data=None):
@@ -335,10 +334,8 @@ def handle_exception(code: int, data=None):
         {
             100: UnsupportedService,
             102: FileTooLarge,
-
             103: InvalidRequest,
             104: InvalidRequest,
-
             105: InvalidSession,
             106: AccessDenied,
             107: UnexistentData,
@@ -373,11 +370,9 @@ def handle_exception(code: int, data=None):
             300: BadImage,
             313: InvalidThemepack,
             314: InvalidVoiceNote,
-
             500: RequestedNoLongerExist,
             700: RequestedNoLongerExist,
             1600: RequestedNoLongerExist,
-
             503: PageRepostedTooRecently,
             551: InsufficientLevel,
             702: WallCommentingDisabled,
@@ -414,10 +409,8 @@ def handle_exception(code: int, data=None):
             3905: NotOwnerOfChatBubble,
             4300: NotEnoughCoins,
             4400: AlreadyPlayedLottery,
-            
             4500: CannotSendCoins,
             4501: CannotSendCoins,
-
             6001: AminoIDAlreadyChanged,
             6002: InvalidAminoID,
             9901: InvalidName,

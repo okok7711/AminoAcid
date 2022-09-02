@@ -330,7 +330,7 @@ def handle_exception(code: int, data=None):
         The api:statuscode
     """
     # TODO: Complete this list
-    raise (
+    raise AminoBaseException(
         {
             100: UnsupportedService,
             102: FileTooLarge,

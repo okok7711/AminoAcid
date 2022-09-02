@@ -321,7 +321,7 @@ class InvalidName(AminoBaseException):
     ...
 
 
-def handle_exception(code: int, data = ""):
+def handle_exception(code: int, data=""):
     """Raises a given exception
 
     Parameters

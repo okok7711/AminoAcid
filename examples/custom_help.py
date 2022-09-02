@@ -11,17 +11,21 @@ client = Bot(
 
 client.unregister_command("help")
 
+
 @client.command()
 async def roll(ctx: Context):
     await ctx.send(f"You rolled a {random.randint(1, 6)}")
+
 
 @client.command()
 async def help(ctx: Context):
     await ctx.send("This is my custom help command!")
 
+
 @client.event()
 async def on_ready():
     print("Ready!")
+
 
 client.run(session="AnsiMSI6...")
 # OR

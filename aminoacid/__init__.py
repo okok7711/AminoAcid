@@ -81,7 +81,7 @@ class Bot(ApiClient):
         self._http = HttpClient(logger=self.logger, **kwargs)
 
         super().__init__()
-    
+
     def unregister_command(self, name: str):
         if not self.__command_map__.pop(name, ""):
             raise CommandNotFound(name)

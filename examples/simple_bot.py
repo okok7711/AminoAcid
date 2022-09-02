@@ -24,7 +24,7 @@ async def claim(ctx: Context):
 
 
 @claim.error()
-async def claim_errorr(exc: AminoBaseException, ctx: Context):
+async def claim_error(exc: AminoBaseException, ctx: Context):
     await ctx.send(f"An error occurred: {exc}")
 
 

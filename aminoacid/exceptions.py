@@ -321,8 +321,8 @@ class InvalidName(AminoBaseException):
     ...
 
 
-def handle_exception(code: int, data=None):
-    """Puts an Exception with the given error code into the logger with Exception severity
+def handle_exception(code: int, data = ""):
+    """Raises a given exception
 
     Parameters
     ----------
@@ -415,7 +415,7 @@ def handle_exception(code: int, data=None):
             6002: InvalidAminoID,
             9901: InvalidName,
         }.get(code, UnknownExcepion)
-    )
+    )(data)
 
 
 class CommandNotFound(AminoBaseException):

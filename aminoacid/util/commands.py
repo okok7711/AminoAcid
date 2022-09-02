@@ -31,7 +31,7 @@ class UserCommand:
         self,
         func: Callable[..., Coroutine[Any, Any, T]],
         command_name: str = "",
-        check: Optional[Callable[[Context], bool]] = None,
+        check: Optional[Callable[[Context], bool]] = lambda ctx: True,
         check_any: Optional[List[Callable[[Context], bool]]] = list(),
         cooldown: Optional[int] = 0,
     ) -> None:
@@ -44,7 +44,7 @@ class UserCommand:
         command_name : str, optional
             Name of the command, by default the function name
         check : Optional[Callable[[Context], bool]], optional
-            Function which is called to see if the command may be called, by default always True
+            Function which is called to see if the command may be called, by default always returns True
         check_any : Optional[List[Callable[[Context], bool]]], optional
             List of checks, command will execute if any of them return True, by default []
         cooldown : Optional[int]
